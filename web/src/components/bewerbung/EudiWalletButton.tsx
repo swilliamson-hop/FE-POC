@@ -93,7 +93,13 @@ export function EudiWalletButton({ onPidReceived }: Props) {
       if (!resp.ok) throw new Error('Service nicht erreichbar')
       const data = await resp.json()
       const mobile = isMobileDevice()
-      setFlow({ status: 'ready', sessionId: data.sessionId, walletUrl: data.walletUrl, isMobile: mobile })
+      if (mobile) {
+        // Mobile: show "Wallet öffnen" button first, then user taps to open deep link
+        setFlow({ status: 'ready', sessionId: data.sessionId, walletUrl: data.walletUrl, isMobile: true })
+      } else {
+        // Desktop: start polling immediately as soon as QR code is shown
+        startPolling(data.sessionId, data.walletUrl, false)
+      }
     } catch {
       setFlow({ status: 'error', message: 'EUDI Wallet Service nicht erreichbar.' })
     }
@@ -199,19 +205,10 @@ export function EudiWalletButton({ onPidReceived }: Props) {
           <QRCodeSVG value={currentFlow.walletUrl} size={200} />
         </div>
       </div>
-      {isPolling ? (
-        <div className="mt-3 flex items-center justify-center gap-2 text-sm text-blue-700">
-          <span className="animate-spin inline-block">⟳</span>
-          Warte auf Freigabe in der Wallet...
-        </div>
-      ) : (
-        <button
-          onClick={() => startPolling(currentFlow.sessionId, currentFlow.walletUrl, false)}
-          className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-        >
-          Ich habe den QR-Code gescannt
-        </button>
-      )}
+      <div className="mt-3 flex items-center justify-center gap-2 text-sm text-blue-700">
+        <span className="animate-spin inline-block">⟳</span>
+        Warte auf Freigabe in der Wallet...
+      </div>
       <button onClick={handleReset} className="mt-2 w-full text-xs text-blue-500 underline">
         Abbrechen
       </button>

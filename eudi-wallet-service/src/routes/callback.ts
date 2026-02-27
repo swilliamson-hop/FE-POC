@@ -4,7 +4,6 @@ import { validateVpToken, ValidationError } from '../lib/validator.js'
 
 export async function handleCallback(c: Context): Promise<Response> {
   const sessionId = c.req.param('sessionId')
-  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000'
 
   const session = getSessionById(sessionId)
 
@@ -49,8 +48,10 @@ export async function handleCallback(c: Context): Promise<Response> {
 
     console.log(`[Callback] Session ${sessionId} complete – PID received for ${pidClaims.given_name} ${pidClaims.family_name}`)
 
-    // For same-device flow: redirect wallet back to frontend
-    const redirectUri = `${frontendUrl}/bewerbung?wallet_session=${sessionId}`
+    // Redirect wallet browser to /done/ page (works on phone for both QR and same-device flows)
+    // /done/ page shows a success message and attempts JS redirect to the frontend
+    const serviceUrl = process.env.SERVICE_URL ?? `http://localhost:${process.env.PORT ?? 3001}`
+    const redirectUri = `${serviceUrl}/done/${sessionId}`
     return c.json({ redirect_uri: redirectUri }, 200)
   } catch (err) {
     const message = err instanceof ValidationError ? err.message : 'VP token validation failed'

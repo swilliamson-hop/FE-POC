@@ -28,7 +28,7 @@ function BewerbungContent() {
     updateFields({
       firstname: claims.given_name,
       lastname: claims.family_name,
-      dateOfBirth: claims.birth_date,
+      dateOfBirth: claims.birthdate,
       ...(claims.street_address ? { street: claims.street_address } : {}),
       ...(claims.postal_code ? { zipCode: claims.postal_code } : {}),
       ...(claims.locality ? { city: claims.locality } : {}),

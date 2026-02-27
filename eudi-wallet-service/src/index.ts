@@ -32,6 +32,42 @@ app.get('/request/:sessionId', handleRequest)
 app.post('/callback/:sessionId', handleCallback)
 app.get('/result/:sessionId', handleResult)
 
+// Wallet redirect landing page – opened by wallet browser after presentation
+// Redirects back to frontend if accessible, otherwise shows a completion message
+app.get('/done/:sessionId', (c) => {
+  const sessionId = c.req.param('sessionId')
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000'
+  const redirectTarget = `${frontendUrl}/bewerbung?wallet_session=${sessionId}`
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentifizierung abgeschlossen</title>
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f0fdf4; }
+    .card { background: white; border-radius: 16px; padding: 2rem; text-align: center; max-width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+    .icon { font-size: 3rem; margin-bottom: 1rem; }
+    h1 { color: #166534; font-size: 1.25rem; margin: 0 0 .5rem; }
+    p { color: #4b5563; font-size: .9rem; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">✅</div>
+    <h1>Authentifizierung abgeschlossen</h1>
+    <p>Ihre Daten wurden erfolgreich übertragen.<br>Kehren Sie zu Ihrem Browser zurück.</p>
+  </div>
+  <script>
+    // Try to redirect to frontend (works for same-device flow with public frontend URL)
+    setTimeout(function() {
+      window.location.href = ${JSON.stringify(redirectTarget)};
+    }, 500);
+  </script>
+</body>
+</html>`)
+})
+
 const port = Number(process.env.PORT ?? 3001)
 
 // Load trust lists on startup
