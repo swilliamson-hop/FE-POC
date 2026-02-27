@@ -18,7 +18,8 @@ export async function handleInitiate(c: Context): Promise<Response> {
     extractable: true,
   })
   const ephemeralPublicKeyJwk = await exportJWK(publicKey)
-  // Add key use and algorithm hint
+  // kid + alg required by EUDI wallet: it filters out JWK keys where kid or alg is empty
+  ephemeralPublicKeyJwk.kid = randomUUID()
   ephemeralPublicKeyJwk.use = 'enc'
   ephemeralPublicKeyJwk.alg = 'ECDH-ES'
 

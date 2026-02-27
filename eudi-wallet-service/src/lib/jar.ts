@@ -100,19 +100,16 @@ export async function createSignedJar(params: JarParams): Promise<string> {
       jwks: {
         keys: [ephemeralPublicKeyJwk],
       },
-      // vp_formats (not vp_formats_supported) per OpenID4VP draft 20+ / HAIP
-      vp_formats: {
+      // Wallet reads "vp_formats_supported" (ClientMetaData.swift CodingKeys)
+      vp_formats_supported: {
         'dc+sd-jwt': {
           'sd-jwt_alg_values': ['ES256'],
           'kb-jwt_alg_values': ['ES256'],
         },
-        mso_mdoc: {
-          alg: ['ES256'],
-        },
       },
-      // Required for direct_post.jwt: tells the wallet how to encrypt the VP Token response (JARM)
-      authorization_encrypted_response_alg: 'ECDH-ES',
-      authorization_encrypted_response_enc: 'A128GCM',
+      // Wallet reads "encrypted_response_enc_values_supported" to build ResponseEncryptionSpecification
+      // (authorization_encrypted_response_alg/enc are NOT read by the wallet library)
+      encrypted_response_enc_values_supported: ['A128GCM', 'A256GCM'],
     },
   }
 
