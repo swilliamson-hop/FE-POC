@@ -110,7 +110,8 @@ function validateSessionBinding(
     throw new ValidationError(2, `Audience mismatch: got ${payload.aud}`)
   }
 
-  if (!payload.iat || (payload.iat as number) > now + 60) {
+  // iat is optional for DCQL responses (no outer VP JWT wrapper)
+  if (payload.iat && (payload.iat as number) > now + 60) {
     throw new ValidationError(2, 'iat is in the future')
   }
 
