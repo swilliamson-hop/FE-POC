@@ -147,13 +147,21 @@ export function EudiWalletButton({ onPidReceived }: Props) {
 
   if (flow.status === 'idle') {
     return (
-      <button
-        onClick={handleStart}
-        className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-blue-600 bg-white px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
-      >
-        <WalletIcon />
-        Mit EU Digital Identity Wallet ausfüllen
-      </button>
+      <div className="flex flex-col items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://interoperable-europe.ec.europa.eu/sites/default/files/news/logo/2024-03/Logo%20-%20EUDIW.png"
+          alt="EU Digital Identity Wallet"
+          className="h-16 w-auto"
+        />
+        <button
+          onClick={handleStart}
+          className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-blue-600 bg-white px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
+        >
+          <WalletIcon />
+          Mit EU Digital Identity Wallet ausfüllen
+        </button>
+      </div>
     )
   }
 
