@@ -23,8 +23,16 @@ function BewerbungContent() {
   const { formState, updateField, updateFields, isLoaded } = useApplicationForm(propertyId);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [walletVerifiedFields, setWalletVerifiedFields] = useState<Set<string>>(new Set());
 
   const handlePidReceived = (claims: PidClaims) => {
+    const verified = new Set(['firstname', 'lastname']);
+    if (claims.birthdate) verified.add('dateOfBirth');
+    if (claims.street_address) verified.add('street');
+    if (claims.postal_code) verified.add('zipCode');
+    if (claims.locality) verified.add('city');
+    setWalletVerifiedFields(verified);
+
     updateFields({
       firstname: claims.given_name,
       lastname: claims.family_name,
@@ -165,6 +173,7 @@ function BewerbungContent() {
             housingPermissionType={formState.housingPermissionType}
             housingPermissionAmountPeople={formState.housingPermissionAmountPeople}
             wbsCertificate={formState.wbsCertificate}
+            walletVerifiedFields={walletVerifiedFields}
             onFirstnameChange={(value) => updateField('firstname', value)}
             onLastnameChange={(value) => updateField('lastname', value)}
             onBundeslandChange={(value) => updateField('housingPermissionBundesland', value)}
@@ -187,6 +196,7 @@ function BewerbungContent() {
             country={formState.country}
             phone={formState.phone}
             portrait={formState.portrait}
+            walletVerifiedFields={walletVerifiedFields}
             onStreetChange={(value) => updateField('street', value)}
             onHouseNumberChange={(value) => updateField('houseNumber', value)}
             onZipCodeChange={(value) => updateField('zipCode', value)}
@@ -203,6 +213,7 @@ function BewerbungContent() {
         {currentStep === 4 && (
           <StepHousehold
             dateOfBirth={formState.dateOfBirth}
+            walletVerifiedFields={walletVerifiedFields}
             professionType={formState.professionType}
             professionSubType={formState.professionSubType}
             income={formState.income}

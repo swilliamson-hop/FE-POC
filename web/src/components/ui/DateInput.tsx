@@ -1,10 +1,11 @@
 'use client';
 
 import { forwardRef, useState } from 'react';
+import type React from 'react';
 import { Calendar } from 'lucide-react';
 
 interface DateInputProps {
-  label: string;
+  label: React.ReactNode;
   value: string;
   onChange: (value: string) => void;
   error?: string;

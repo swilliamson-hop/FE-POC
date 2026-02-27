@@ -10,10 +10,12 @@ import { DateInput } from '@/components/ui/DateInput';
 import { TextArea } from '@/components/ui/TextArea';
 import { ToggleGroup } from '@/components/ui/ToggleGroup';
 import { DataPrivacyBanner } from './DataPrivacyBanner';
+import { VerifiedBadge } from './EudiWalletButton';
 import type { HouseholdType, ProfessionType } from '@/lib/types/application';
 
 interface StepHouseholdProps {
   dateOfBirth: string;
+  walletVerifiedFields?: Set<string>;
   professionType: ProfessionType | '';
   professionSubType: string;
   income: number;
@@ -59,6 +61,7 @@ const HOUSEHOLD_OPTIONS = [
 
 export function StepHousehold({
   dateOfBirth,
+  walletVerifiedFields = new Set(),
   professionType,
   professionSubType,
   income,
@@ -92,7 +95,11 @@ export function StepHousehold({
       </div>
 
       <DateInput
-        label="Geburtstag"
+        label={
+          <span className="flex items-center gap-2">
+            Geburtstag {walletVerifiedFields.has('dateOfBirth') && <VerifiedBadge />}
+          </span>
+        }
         value={dateOfBirth}
         onChange={onDateOfBirthChange}
       />

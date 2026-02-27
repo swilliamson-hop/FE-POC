@@ -25,6 +25,7 @@ interface StepPersonalInfoProps {
   onWBSChange: (value: string | null) => void;
   onAmountPeopleChange: (value: number) => void;
   onWbsCertificateChange: (doc: UploadedDocument | null) => void;
+  walletVerifiedFields?: Set<string>;
   onPidReceived: (claims: PidClaims) => void;
   onNext: () => void;
   onBack: () => void;
@@ -37,6 +38,7 @@ export function StepPersonalInfo({
   housingPermissionType,
   housingPermissionAmountPeople,
   wbsCertificate,
+  walletVerifiedFields = new Set(),
   onFirstnameChange,
   onLastnameChange,
   onBundeslandChange,
@@ -49,12 +51,6 @@ export function StepPersonalInfo({
 }: StepPersonalInfoProps) {
   const [uploadingWbs, setUploadingWbs] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [walletVerifiedFields, setWalletVerifiedFields] = useState<Set<string>>(new Set());
-
-  function handlePidReceived(claims: PidClaims) {
-    setWalletVerifiedFields(new Set(['firstname', 'lastname']));
-    onPidReceived(claims);
-  }
 
   const isNextEnabled = firstname.trim().length > 0 && lastname.trim().length > 0;
 

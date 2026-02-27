@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { FileUpload } from '@/components/ui/FileUpload';
 import { DataPrivacyBanner } from './DataPrivacyBanner';
+import { VerifiedBadge } from './EudiWalletButton';
 import { searchAddress, AddressSuggestion } from '@/lib/api/address-autocomplete';
 import { uploadFile } from '@/lib/api/file-upload';
 import { BUNDESLAENDER } from '@/lib/constants/bundeslaender-wbs';
@@ -21,6 +22,7 @@ interface StepContactInfoProps {
   country: string;
   phone: string;
   portrait: UploadedDocument | null;
+  walletVerifiedFields?: Set<string>;
   onStreetChange: (value: string) => void;
   onHouseNumberChange: (value: string) => void;
   onZipCodeChange: (value: string) => void;
@@ -42,6 +44,7 @@ export function StepContactInfo({
   country,
   phone,
   portrait,
+  walletVerifiedFields = new Set(),
   onStreetChange,
   onHouseNumberChange,
   onZipCodeChange,
@@ -54,6 +57,11 @@ export function StepContactInfo({
   onBack,
 }: StepContactInfoProps) {
   const [streetQuery, setStreetQuery] = useState(street);
+
+  // Sync streetQuery when street prop is updated externally (e.g. wallet pre-fill)
+  useEffect(() => {
+    setStreetQuery(street);
+  }, [street]);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [uploadingPortrait, setUploadingPortrait] = useState(false);
@@ -147,7 +155,11 @@ export function StepContactInfo({
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2 relative">
             <Input
-              label="Straße"
+              label={
+                <span className="flex items-center gap-2">
+                  Straße {walletVerifiedFields.has('street') && <VerifiedBadge />}
+                </span>
+              }
               value={streetQuery}
               onChange={(e) => handleStreetInputChange(e.target.value)}
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
@@ -182,14 +194,22 @@ export function StepContactInfo({
 
       <div className="grid grid-cols-3 gap-4">
         <Input
-          label="PLZ"
+          label={
+            <span className="flex items-center gap-2">
+              PLZ {walletVerifiedFields.has('zipCode') && <VerifiedBadge />}
+            </span>
+          }
           value={zipCode}
           onChange={(e) => onZipCodeChange(e.target.value.slice(0, 5))}
           maxLength={5}
         />
         <div className="col-span-2">
           <Input
-            label="Stadt"
+            label={
+              <span className="flex items-center gap-2">
+                Stadt {walletVerifiedFields.has('city') && <VerifiedBadge />}
+              </span>
+            }
             value={city}
             onChange={(e) => onCityChange(e.target.value)}
           />
