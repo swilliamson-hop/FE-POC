@@ -1,4 +1,5 @@
 import { SignJWT, importPKCS8 } from 'jose'
+import { createHash } from 'node:crypto'
 import type { JWK } from 'jose'
 import type { DcqlQuery } from '../types.js'
 
@@ -16,13 +17,15 @@ function parseCertChain(certChainPem: string): string[] {
   return certs
 }
 
-// Compute client_id using x509_san_dns scheme:
-// client_id = "x509_san_dns:<hostname>" where hostname matches the SAN DNS in the Access Certificate
-// The wallet verifies that the x5c leaf cert's SAN DNS matches this hostname.
+// Compute client_id using x509_hash scheme (required by HAIP / SPRIND wallet):
+// client_id = "x509_hash:<base64url(sha256(leaf_cert_DER))>"
 export function computeClientId(): string {
-  const serviceUrl = process.env.SERVICE_URL!
-  const hostname = new URL(serviceUrl).hostname
-  return `x509_san_dns:${hostname}`
+  const certChainPem = process.env.CERT_CHAIN!.replace(/\\n/g, '\n')
+  const certs = parseCertChain(certChainPem)
+  if (certs.length === 0) throw new Error('No certificates found in CERT_CHAIN')
+  const leafDer = Buffer.from(certs[0], 'base64')
+  const thumbprint = createHash('sha256').update(leafDer).digest('base64url')
+  return `x509_hash:${thumbprint}`
 }
 
 // Load the Access Certificate private key from env
@@ -121,9 +124,8 @@ export async function createSignedJar(params: JarParams): Promise<string> {
           deviceauth_alg_values: [-7],
         },
       },
-      // Tells the wallet exactly which algorithm to use for encrypting the response
-      authorization_encrypted_response_alg: 'ECDH-ES',
-      authorization_encrypted_response_enc: 'A256GCM',
+      // Capabilities list – matches the format used by the EUDI reference verifier
+      encrypted_response_enc_values_supported: ['A128GCM', 'A256GCM'],
     },
   }
 
