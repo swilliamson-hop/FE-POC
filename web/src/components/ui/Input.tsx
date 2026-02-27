@@ -3,7 +3,7 @@
 import { InputHTMLAttributes, forwardRef, useState } from 'react';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label: React.ReactNode;
   error?: string;
   icon?: React.ReactNode;
 }

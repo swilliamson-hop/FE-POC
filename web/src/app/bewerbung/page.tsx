@@ -11,6 +11,7 @@ import { StepDocuments } from '@/components/bewerbung/StepDocuments';
 import { useApplicationForm } from '@/lib/hooks/useApplicationForm';
 import { applyAsGuest } from '@/lib/api/mutations';
 import type { GuestDataInput, HouseholdType, ProfessionType } from '@/lib/types/application';
+import type { PidClaims } from '@/components/bewerbung/types';
 
 const TOTAL_STEPS = 5;
 
@@ -22,6 +23,17 @@ function BewerbungContent() {
   const { formState, updateField, updateFields, isLoaded } = useApplicationForm(propertyId);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handlePidReceived = (claims: PidClaims) => {
+    updateFields({
+      firstname: claims.given_name,
+      lastname: claims.family_name,
+      dateOfBirth: claims.birth_date,
+      ...(claims.street_address ? { street: claims.street_address } : {}),
+      ...(claims.postal_code ? { zipCode: claims.postal_code } : {}),
+      ...(claims.locality ? { city: claims.locality } : {}),
+    });
+  };
 
   const goToNextStep = () => {
     if (currentStep < TOTAL_STEPS) {
@@ -159,6 +171,7 @@ function BewerbungContent() {
             onWBSChange={(value) => updateField('housingPermissionType', value)}
             onAmountPeopleChange={(value) => updateField('housingPermissionAmountPeople', value)}
             onWbsCertificateChange={(doc) => updateField('wbsCertificate', doc)}
+            onPidReceived={handlePidReceived}
             onNext={goToNextStep}
             onBack={goToPreviousStep}
           />

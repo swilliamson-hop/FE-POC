@@ -7,8 +7,10 @@ import { NumberInput } from '@/components/ui/NumberInput';
 import { FileUpload } from '@/components/ui/FileUpload';
 import { DataPrivacyBanner } from './DataPrivacyBanner';
 import { WBSSelector } from './WBSSelector';
+import { EudiWalletButton, VerifiedBadge } from './EudiWalletButton';
 import { uploadFile } from '@/lib/api/file-upload';
 import type { UploadedDocument } from '@/lib/types/application';
+import type { PidClaims } from './types';
 
 interface StepPersonalInfoProps {
   firstname: string;
@@ -23,6 +25,7 @@ interface StepPersonalInfoProps {
   onWBSChange: (value: string | null) => void;
   onAmountPeopleChange: (value: number) => void;
   onWbsCertificateChange: (doc: UploadedDocument | null) => void;
+  onPidReceived: (claims: PidClaims) => void;
   onNext: () => void;
   onBack: () => void;
 }
@@ -40,11 +43,18 @@ export function StepPersonalInfo({
   onWBSChange,
   onAmountPeopleChange,
   onWbsCertificateChange,
+  onPidReceived,
   onNext,
   onBack,
 }: StepPersonalInfoProps) {
   const [uploadingWbs, setUploadingWbs] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [walletVerifiedFields, setWalletVerifiedFields] = useState<Set<string>>(new Set());
+
+  function handlePidReceived(claims: PidClaims) {
+    setWalletVerifiedFields(new Set(['firstname', 'lastname']));
+    onPidReceived(claims);
+  }
 
   const isNextEnabled = firstname.trim().length > 0 && lastname.trim().length > 0;
 
@@ -70,15 +80,31 @@ export function StepPersonalInfo({
         <h2 className="text-2xl font-bold text-gray-900">Persönliche Angaben</h2>
       </div>
 
+      <EudiWalletButton onPidReceived={handlePidReceived} />
+
+      <div className="relative flex items-center">
+        <div className="flex-grow border-t border-gray-200" />
+        <span className="mx-3 flex-shrink text-xs text-gray-400">oder manuell eingeben</span>
+        <div className="flex-grow border-t border-gray-200" />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <Input
-          label="Vorname"
+          label={
+            <span className="flex items-center gap-2">
+              Vorname {walletVerifiedFields.has('firstname') && <VerifiedBadge />}
+            </span>
+          }
           value={firstname}
           onChange={(e) => onFirstnameChange(e.target.value)}
           required
         />
         <Input
-          label="Nachname"
+          label={
+            <span className="flex items-center gap-2">
+              Nachname {walletVerifiedFields.has('lastname') && <VerifiedBadge />}
+            </span>
+          }
           value={lastname}
           onChange={(e) => onLastnameChange(e.target.value)}
           required
