@@ -32,8 +32,8 @@ export async function handleInitiate(c: Context): Promise<Response> {
 
   // Store session (keyed by sessionId for lookup)
   const now = Date.now()
-  createSession({
-    nonce: sessionId, // we use sessionId as the session map key
+  createSession(sessionId, {
+    nonce,
     ephemeralPrivateKey: privateKey,
     ephemeralPublicKeyJwk,
     createdAt: now,

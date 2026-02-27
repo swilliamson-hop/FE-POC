@@ -14,8 +14,8 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000)
 
-export function createSession(state: SessionState): void {
-  sessions.set(state.nonce, state)
+export function createSession(sessionId: string, state: SessionState): void {
+  sessions.set(sessionId, state)
 }
 
 export function getSessionById(sessionId: string): SessionState | undefined {
