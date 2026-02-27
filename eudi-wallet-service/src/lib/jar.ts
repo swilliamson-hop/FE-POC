@@ -123,7 +123,9 @@ export async function createSignedJar(params: JarParams): Promise<string> {
           deviceauth_alg_values: [-7],
         },
       },
-      encrypted_response_enc_values_supported: ['A128GCM', 'A256GCM'],
+      // Tells the wallet exactly which algorithm to use for encrypting the response
+      authorization_encrypted_response_alg: 'ECDH-ES',
+      authorization_encrypted_response_enc: 'A256GCM',
     },
   }
 

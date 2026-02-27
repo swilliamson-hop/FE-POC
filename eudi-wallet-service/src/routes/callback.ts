@@ -16,19 +16,27 @@ export async function handleCallback(c: Context): Promise<Response> {
     return c.json({ error: 'Session expired' }, 410)
   }
 
-  // Parse body – wallet sends application/x-www-form-urlencoded or application/json
+  // Parse body – wallet sends application/x-www-form-urlencoded with `response` field (direct_post.jwt)
   let body: Record<string, unknown>
   const contentType = c.req.header('content-type') ?? ''
 
+  console.log(`[Callback] Content-Type: ${contentType}`)
+
   if (contentType.includes('application/x-www-form-urlencoded')) {
     const formData = await c.req.formData()
-    body = Object.fromEntries(formData.entries())
-  } else if (contentType.includes('application/jwt')) {
-    // direct_post.jwt mode: body is a JWT
-    const rawJwt = await c.req.text()
-    body = { vp_token: rawJwt }
+    const raw = Object.fromEntries(formData.entries())
+    console.log(`[Callback] Form fields: ${Object.keys(raw).join(', ')}`)
+
+    if (raw.response) {
+      // direct_post.jwt: `response` field contains a JWE wrapping { vp_token, presentation_submission }
+      body = { _encryptedResponse: raw.response as string }
+    } else {
+      // Fallback: direct_post (unencrypted) sends vp_token directly
+      body = raw
+    }
   } else {
     body = await c.req.json<Record<string, unknown>>()
+    console.log(`[Callback] JSON fields: ${Object.keys(body).join(', ')}`)
   }
 
   try {

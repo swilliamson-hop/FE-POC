@@ -12,28 +12,44 @@ export class ValidationError extends Error {
   }
 }
 
-// Layer 1: Transport & structure validation
-function validateStructure(body: Record<string, unknown>): string {
+// Layer 1: Transport & structure – handles both direct_post.jwt (encrypted `response`)
+// and direct_post (plain `vp_token`).  Returns the raw vp_token string.
+async function validateStructure(
+  body: Record<string, unknown>,
+  ephemeralPrivateKey: CryptoKey
+): Promise<string> {
+  // direct_post.jwt: body contains _encryptedResponse (the JWE `response` field)
+  if (body._encryptedResponse && typeof body._encryptedResponse === 'string') {
+    console.log('[Layer 1] direct_post.jwt: decrypting JWE response field')
+    const jwe = body._encryptedResponse as string
+    if (jwe.length > 2_000_000) {
+      throw new ValidationError(1, 'Encrypted response exceeds maximum size')
+    }
+    const { plaintext } = await compactDecrypt(jwe, ephemeralPrivateKey)
+    const decoded = new TextDecoder().decode(plaintext)
+    console.log('[Layer 1] Decrypted response:', decoded.substring(0, 200))
+    // Decrypted payload is JSON: { vp_token, presentation_submission }
+    let inner: Record<string, unknown>
+    try {
+      inner = JSON.parse(decoded) as Record<string, unknown>
+    } catch {
+      // Could also be a raw SD-JWT or VP JWT string directly
+      return decoded
+    }
+    if (!inner.vp_token || typeof inner.vp_token !== 'string') {
+      throw new ValidationError(1, 'Decrypted response missing vp_token')
+    }
+    return inner.vp_token as string
+  }
+
+  // direct_post (unencrypted): vp_token field
   if (!body.vp_token || typeof body.vp_token !== 'string') {
     throw new ValidationError(1, 'Missing or invalid vp_token in request body')
   }
-  if (body.vp_token.length > 1_000_000) {
+  if ((body.vp_token as string).length > 1_000_000) {
     throw new ValidationError(1, 'vp_token exceeds maximum size')
   }
   return body.vp_token as string
-}
-
-// Layer 1b: Decrypt JWE if response is encrypted
-async function decryptResponse(vpToken: string, ephemeralPrivateKey: CryptoKey): Promise<string> {
-  // Check if it's a JWE (5 parts) or already a JWT/SD-JWT
-  const parts = vpToken.split('.')
-  if (parts.length === 5) {
-    // JWE - decrypt with ephemeral private key
-    const { plaintext } = await compactDecrypt(vpToken, ephemeralPrivateKey)
-    return new TextDecoder().decode(plaintext)
-  }
-  // Already a JWT or SD-JWT presentation
-  return vpToken
 }
 
 // Layer 2: Session binding (nonce + audience + timestamps)
@@ -193,11 +209,8 @@ export async function validateVpToken(
 ): Promise<PidClaims> {
   const clientId = process.env.CLIENT_ID!
 
-  // Layer 1: Structure
-  const rawVpToken = validateStructure(body)
-
-  // Layer 1b: Decrypt if JWE
-  const vpToken = await decryptResponse(rawVpToken, session.ephemeralPrivateKey)
+  // Layer 1: Structure + decrypt if direct_post.jwt
+  const vpToken = await validateStructure(body, session.ephemeralPrivateKey)
 
   // Parse outer VP token payload
   let outerPayload: Record<string, unknown>

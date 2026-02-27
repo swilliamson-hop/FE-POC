@@ -16,6 +16,8 @@ export async function handleRequest(c: Context): Promise<Response> {
     return c.json({ error: 'Session expired' }, 410)
   }
 
+  console.log(`[Request] Wallet fetched JAR for session ${sessionId} from ${c.req.header('user-agent') ?? 'unknown'}`)
+
   // Create the signed JAR on demand (wallet fetches this)
   const jar = await createSignedJar({
     sessionId,
