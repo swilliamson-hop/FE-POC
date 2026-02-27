@@ -172,14 +172,16 @@ function validateHolderBinding(credential: string, nonce: string): void {
   }
 
   try {
+    const kbHeader = decodeProtectedHeader(kbJwt)
     const kbPayload = decodeJwt(kbJwt) as Record<string, unknown>
+
+    // typ is in the protected header, not the payload
+    if (kbHeader.typ !== 'kb+jwt') {
+      throw new ValidationError(4, `Invalid KB-JWT type: ${kbHeader.typ}`)
+    }
 
     if (kbPayload.nonce !== nonce) {
       throw new ValidationError(4, 'Key binding nonce mismatch')
-    }
-
-    if (kbPayload.typ !== 'kb+jwt') {
-      throw new ValidationError(4, 'Invalid KB-JWT type')
     }
 
     // Full signature verification would use the holder's public key bound in the SD-JWT
