@@ -37,7 +37,7 @@ const port = Number(process.env.PORT ?? 3001)
 // Load trust lists on startup
 loadTrustLists()
   .then(() => {
-    serve({ fetch: app.fetch, port }, () => {
+    serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, () => {
       console.log(`[EUDI Wallet Service] Running on port ${port}`)
       console.log(`[EUDI Wallet Service] Service URL: ${process.env.SERVICE_URL ?? `http://localhost:${port}`}`)
     })
