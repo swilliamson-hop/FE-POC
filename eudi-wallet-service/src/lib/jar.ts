@@ -1,9 +1,9 @@
-import { SignJWT, importPKCS8, exportJWK } from 'jose'
+import { SignJWT, importPKCS8 } from 'jose'
+import { createHash } from 'node:crypto'
 import type { JWK } from 'jose'
 import type { DcqlQuery } from '../types.js'
 
 const SERVICE_URL = process.env.SERVICE_URL!
-const CLIENT_ID = process.env.CLIENT_ID!
 
 // Parse PEM certificate chain into array of base64 DER strings (for x5c header)
 function parseCertChain(certChainPem: string): string[] {
@@ -15,6 +15,16 @@ function parseCertChain(certChainPem: string): string[] {
     certs.push(match[1].replace(/\r?\n/g, ''))
   }
   return certs
+}
+
+// Compute x509_hash client_id: "x509_hash:<base64url(sha256(leaf_cert_der))>"
+// This is the client_id_scheme used by the EUDI reference verifier implementation
+export function computeClientId(certChainPem: string): string {
+  const certs = parseCertChain(certChainPem)
+  if (certs.length === 0) throw new Error('No certificates found in CERT_CHAIN')
+  const leafDer = Buffer.from(certs[0], 'base64')
+  const thumbprint = createHash('sha256').update(leafDer).digest('base64url')
+  return `x509_hash:${thumbprint}`
 }
 
 // Load the Access Certificate private key from env
@@ -61,7 +71,7 @@ export function buildDcqlQuery(): DcqlQuery {
         ],
       },
     ],
-    // credential_sets: wallet must present one of the two formats (not both)
+    // credential_sets: wallet can present either sd-jwt OR mdoc (not both required)
     credential_sets: [
       {
         options: [['pid-sd-jwt'], ['pid-mso-mdoc']],
@@ -84,19 +94,17 @@ export async function createSignedJar(params: JarParams): Promise<string> {
   const privateKey = await getPrivateKey()
   const certChainPem = process.env.CERT_CHAIN!.replace(/\\n/g, '\n')
   const x5c = parseCertChain(certChainPem)
+  const clientId = computeClientId(certChainPem)
 
   const now = Math.floor(Date.now() / 1000)
   const responseUri = `${SERVICE_URL}/callback/${sessionId}`
 
   const payload = {
-    iss: CLIENT_ID,
     aud: 'https://self-issued.me/v2',
     iat: now,
-    exp: now + 600, // 10 minutes
-    client_id: CLIENT_ID,
-    client_id_scheme: 'x509_san_dns',
+    client_id: clientId,
     response_type: 'vp_token',
-    response_mode: 'direct_post',
+    response_mode: 'direct_post.jwt',
     nonce,
     state: sessionId,
     response_uri: responseUri,
@@ -105,15 +113,17 @@ export async function createSignedJar(params: JarParams): Promise<string> {
       jwks: {
         keys: [ephemeralPublicKeyJwk],
       },
-      vp_formats: {
+      vp_formats_supported: {
         'dc+sd-jwt': {
-          'sd-jwt_alg_values': ['ES256', 'Ed25519'],
-          'kb-jwt_alg_values': ['ES256', 'Ed25519'],
+          'sd-jwt_alg_values': ['ES256'],
+          'kb-jwt_alg_values': ['ES256'],
         },
         mso_mdoc: {
-          alg: ['ES256', 'Ed25519'],
+          issuerauth_alg_values: [-7],
+          deviceauth_alg_values: [-7],
         },
       },
+      encrypted_response_enc_values_supported: ['A128GCM', 'A256GCM'],
     },
   }
 

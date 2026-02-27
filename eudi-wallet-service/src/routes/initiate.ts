@@ -2,7 +2,7 @@ import { generateKeyPair, exportJWK } from 'jose'
 import { randomBytes, randomUUID } from 'node:crypto'
 import type { Context } from 'hono'
 import { createSession } from '../lib/session.js'
-import { createSignedJar } from '../lib/jar.js'
+import { createSignedJar, computeClientId } from '../lib/jar.js'
 import type { InitiateResponse } from '../types.js'
 
 export async function handleInitiate(c: Context): Promise<Response> {
@@ -42,9 +42,11 @@ export async function handleInitiate(c: Context): Promise<Response> {
   })
 
   // Build the openid4vp:// URL
-  // The wallet fetches the signed JAR from request_uri
+  // client_id uses x509_hash scheme: "x509_hash:<sha256-thumbprint-of-cert>"
+  const certChainPem = (process.env.CERT_CHAIN ?? '').replace(/\\n/g, '\n')
+  const clientId = computeClientId(certChainPem)
   const requestUri = `${serviceUrl}/request/${sessionId}`
-  const walletUrl = `openid4vp://?client_id=${encodeURIComponent(process.env.CLIENT_ID!)}&client_id_scheme=x509_san_dns&request_uri=${encodeURIComponent(requestUri)}`
+  const walletUrl = `openid4vp://?client_id=${encodeURIComponent(clientId)}&request_uri=${encodeURIComponent(requestUri)}`
 
   const response: InitiateResponse = {
     sessionId,
