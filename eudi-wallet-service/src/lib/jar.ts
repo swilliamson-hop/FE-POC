@@ -1,5 +1,4 @@
 import { SignJWT, importPKCS8 } from 'jose'
-import { createHash } from 'node:crypto'
 import type { JWK } from 'jose'
 import type { DcqlQuery } from '../types.js'
 
@@ -17,14 +16,13 @@ function parseCertChain(certChainPem: string): string[] {
   return certs
 }
 
-// Compute x509_hash client_id: "x509_hash:<base64url(sha256(leaf_cert_der))>"
-// This is the client_id_scheme used by the EUDI reference verifier implementation
-export function computeClientId(certChainPem: string): string {
-  const certs = parseCertChain(certChainPem)
-  if (certs.length === 0) throw new Error('No certificates found in CERT_CHAIN')
-  const leafDer = Buffer.from(certs[0], 'base64')
-  const thumbprint = createHash('sha256').update(leafDer).digest('base64url')
-  return `x509_hash:${thumbprint}`
+// Compute client_id using x509_san_dns scheme:
+// client_id = "x509_san_dns:<hostname>" where hostname matches the SAN DNS in the Access Certificate
+// The wallet verifies that the x5c leaf cert's SAN DNS matches this hostname.
+export function computeClientId(): string {
+  const serviceUrl = process.env.SERVICE_URL!
+  const hostname = new URL(serviceUrl).hostname
+  return `x509_san_dns:${hostname}`
 }
 
 // Load the Access Certificate private key from env
@@ -94,7 +92,7 @@ export async function createSignedJar(params: JarParams): Promise<string> {
   const privateKey = await getPrivateKey()
   const certChainPem = process.env.CERT_CHAIN!.replace(/\\n/g, '\n')
   const x5c = parseCertChain(certChainPem)
-  const clientId = computeClientId(certChainPem)
+  const clientId = computeClientId()
 
   const now = Math.floor(Date.now() / 1000)
   const responseUri = `${SERVICE_URL}/callback/${sessionId}`

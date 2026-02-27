@@ -42,9 +42,8 @@ export async function handleInitiate(c: Context): Promise<Response> {
   })
 
   // Build the openid4vp:// URL
-  // client_id uses x509_hash scheme: "x509_hash:<sha256-thumbprint-of-cert>"
-  const certChainPem = (process.env.CERT_CHAIN ?? '').replace(/\\n/g, '\n')
-  const clientId = computeClientId(certChainPem)
+  // client_id uses x509_san_dns scheme: "x509_san_dns:<hostname-matching-cert-SAN>"
+  const clientId = computeClientId()
   const requestUri = `${serviceUrl}/request/${sessionId}`
   const walletUrl = `openid4vp://?client_id=${encodeURIComponent(clientId)}&request_uri=${encodeURIComponent(requestUri)}`
 

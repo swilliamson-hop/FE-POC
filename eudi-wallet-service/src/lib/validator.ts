@@ -207,7 +207,9 @@ export async function validateVpToken(
   body: Record<string, unknown>,
   session: SessionState
 ): Promise<PidClaims> {
-  const clientId = process.env.CLIENT_ID!
+  // Use the same client_id computation as jar.ts so aud check matches
+  const { computeClientId } = await import('./jar.js')
+  const clientId = computeClientId()
 
   // Layer 1: Structure + decrypt if direct_post.jwt
   const vpToken = await validateStructure(body, session.ephemeralPrivateKey)
