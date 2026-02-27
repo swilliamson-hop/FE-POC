@@ -64,7 +64,7 @@ export function extractPidClaims(credential: string): PidClaims {
   const pidClaims: PidClaims = {
     given_name: String(claims.given_name ?? ''),
     family_name: String(claims.family_name ?? ''),
-    birth_date: String(claims.birth_date ?? ''),
+    birthdate: String(claims.birthdate ?? ''),
     street_address: address.street_address ? String(address.street_address) : undefined,
     postal_code: address.postal_code ? String(address.postal_code) : undefined,
     locality: address.locality ? String(address.locality) : undefined,

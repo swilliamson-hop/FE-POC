@@ -27,19 +27,48 @@ async function validateStructure(
     }
     const { plaintext } = await compactDecrypt(jwe, ephemeralPrivateKey)
     const decoded = new TextDecoder().decode(plaintext)
-    console.log('[Layer 1] Decrypted response:', decoded.substring(0, 200))
-    // Decrypted payload is JSON: { vp_token, presentation_submission }
+    console.log('[Layer 1] Decrypted response (first 500):', decoded.substring(0, 500))
+
+    // Case 1: Decrypted content is a compact JWT (JARM token – signed auth response)
+    // JSON.parse would throw on "header.payload.sig" format → handled in catch
     let inner: Record<string, unknown>
     try {
       inner = JSON.parse(decoded) as Record<string, unknown>
     } catch {
-      // Could also be a raw SD-JWT or VP JWT string directly
+      // Not JSON → try decoding as JARM JWT (signed Authorization Response)
+      try {
+        const jarmPayload = decodeJwt(decoded) as Record<string, unknown>
+        console.log('[Layer 1] Decoded as JARM JWT, keys:', Object.keys(jarmPayload).join(', '))
+        if (jarmPayload.vp_token && typeof jarmPayload.vp_token === 'string') {
+          return jarmPayload.vp_token as string
+        }
+      } catch {
+        // Not a JWT either – treat decoded string as the vp_token directly (raw SD-JWT)
+      }
       return decoded
     }
-    if (!inner.vp_token || typeof inner.vp_token !== 'string') {
-      throw new ValidationError(1, 'Decrypted response missing vp_token')
+
+    // Case 2: Decrypted content is JSON
+    console.log('[Layer 1] Decoded as JSON, keys:', Object.keys(inner).join(', '))
+
+    if (inner.vp_token && typeof inner.vp_token === 'string') {
+      return inner.vp_token as string
     }
-    return inner.vp_token as string
+
+    // Case 3: JSON Serialized JWS – has `payload` field (base64url-encoded JWT payload)
+    if (inner.payload && typeof inner.payload === 'string') {
+      try {
+        const jwtPayload = JSON.parse(Buffer.from(inner.payload, 'base64url').toString()) as Record<string, unknown>
+        console.log('[Layer 1] Decoded JSON Serialized JWS payload, keys:', Object.keys(jwtPayload).join(', '))
+        if (jwtPayload.vp_token && typeof jwtPayload.vp_token === 'string') {
+          return jwtPayload.vp_token as string
+        }
+      } catch {
+        // Ignore
+      }
+    }
+
+    throw new ValidationError(1, `Decrypted response missing vp_token. Found keys: ${Object.keys(inner).join(', ')}`)
   }
 
   // direct_post (unencrypted): vp_token field
@@ -192,13 +221,13 @@ function validateBusinessRules(claims: PidClaims): void {
   if (!claims.family_name?.trim()) {
     throw new ValidationError(7, 'family_name is empty or missing')
   }
-  if (!claims.birth_date?.trim()) {
-    throw new ValidationError(7, 'birth_date is empty or missing')
+  if (!claims.birthdate?.trim()) {
+    throw new ValidationError(7, 'birthdate is empty or missing')
   }
 
   // Validate date format (YYYY-MM-DD)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(claims.birth_date)) {
-    throw new ValidationError(7, `Invalid birth_date format: ${claims.birth_date}`)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(claims.birthdate)) {
+    throw new ValidationError(7, `Invalid birthdate format: ${claims.birthdate}`)
   }
 }
 
@@ -258,6 +287,11 @@ function extractCredentialFromVp(
   // If the vp_token itself is an SD-JWT (contains ~)
   if (vpToken.includes('~')) {
     return vpToken
+  }
+
+  // If payload contains vp_token (e.g. vpToken was a JARM wrapper JWT)
+  if (payload.vp_token && typeof payload.vp_token === 'string') {
+    return payload.vp_token
   }
 
   // If wrapped in a VP JWT, look for verifiableCredential
