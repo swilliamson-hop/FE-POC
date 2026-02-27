@@ -52,7 +52,7 @@ export function buildDcqlQuery(): DcqlQuery {
         claims: [
           { path: ['given_name'] },
           { path: ['family_name'] },
-          { path: ['birth_date'] },
+          { path: ['birthdate'] },
           { path: ['address', 'street_address'] },
           { path: ['address', 'postal_code'] },
           { path: ['address', 'locality'] },
