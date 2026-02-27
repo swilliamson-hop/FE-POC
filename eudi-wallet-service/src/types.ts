@@ -36,6 +36,12 @@ export interface ResultResponse {
 // DCQL query types (subset used for PID)
 export interface DcqlQuery {
   credentials: DcqlCredential[]
+  credential_sets?: DcqlCredentialSet[]
+}
+
+export interface DcqlCredentialSet {
+  options: string[][]
+  required?: boolean
 }
 
 export interface DcqlCredential {

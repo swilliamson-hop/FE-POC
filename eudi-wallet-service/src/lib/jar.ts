@@ -61,6 +61,13 @@ export function buildDcqlQuery(): DcqlQuery {
         ],
       },
     ],
+    // credential_sets: wallet must present one of the two formats (not both)
+    credential_sets: [
+      {
+        options: [['pid-sd-jwt'], ['pid-mso-mdoc']],
+        required: true,
+      },
+    ],
   }
 }
 
