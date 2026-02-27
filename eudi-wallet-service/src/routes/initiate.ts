@@ -44,7 +44,7 @@ export async function handleInitiate(c: Context): Promise<Response> {
   // Build the openid4vp:// URL
   // The wallet fetches the signed JAR from request_uri
   const requestUri = `${serviceUrl}/request/${sessionId}`
-  const walletUrl = `openid4vp://?client_id=${encodeURIComponent(process.env.CLIENT_ID!)}&request_uri=${encodeURIComponent(requestUri)}`
+  const walletUrl = `openid4vp://?client_id=${encodeURIComponent(process.env.CLIENT_ID!)}&client_id_scheme=x509_san_dns&request_uri=${encodeURIComponent(requestUri)}`
 
   const response: InitiateResponse = {
     sessionId,

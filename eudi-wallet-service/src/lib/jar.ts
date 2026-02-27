@@ -73,14 +73,13 @@ export interface JarParams {
 
 // Create and sign the JWT Authorization Request (JAR)
 export async function createSignedJar(params: JarParams): Promise<string> {
-  const { sessionId, nonce, ephemeralPublicKeyJwk, frontendUrl } = params
+  const { sessionId, nonce, ephemeralPublicKeyJwk } = params
   const privateKey = await getPrivateKey()
   const certChainPem = process.env.CERT_CHAIN!.replace(/\\n/g, '\n')
   const x5c = parseCertChain(certChainPem)
 
   const now = Math.floor(Date.now() / 1000)
   const responseUri = `${SERVICE_URL}/callback/${sessionId}`
-  const redirectUri = `${frontendUrl}/bewerbung?wallet_session=${sessionId}`
 
   const payload = {
     iss: CLIENT_ID,
@@ -88,12 +87,12 @@ export async function createSignedJar(params: JarParams): Promise<string> {
     iat: now,
     exp: now + 600, // 10 minutes
     client_id: CLIENT_ID,
+    client_id_scheme: 'x509_san_dns',
     response_type: 'vp_token',
-    response_mode: 'direct_post.jwt',
+    response_mode: 'direct_post',
     nonce,
     state: sessionId,
     response_uri: responseUri,
-    redirect_uri: redirectUri,
     dcql_query: buildDcqlQuery(),
     client_metadata: {
       jwks: {
