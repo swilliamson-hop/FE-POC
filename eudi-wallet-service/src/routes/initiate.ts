@@ -14,8 +14,7 @@ export async function handleInitiate(c: Context): Promise<Response> {
   const nonce = randomBytes(32).toString('base64url')
 
   // Generate ephemeral P-256 key pair for JWE response encryption
-  const { privateKey, publicKey } = await generateKeyPair('EC', {
-    crv: 'P-256',
+  const { privateKey, publicKey } = await generateKeyPair('ECDH-ES', {
     extractable: true,
   })
   const ephemeralPublicKeyJwk = await exportJWK(publicKey)
