@@ -38,6 +38,8 @@ export async function getPrivateKey(): Promise<CryptoKey> {
 }
 
 // Build the DCQL query for PID presentation
+// Only request dc+sd-jwt (not mso_mdoc) to avoid ISO 18013-5 reader auth,
+// which requires the German Registrar root CA to be in the iOS system trust store.
 export function buildDcqlQuery(): DcqlQuery {
   return {
     credentials: [
@@ -56,26 +58,10 @@ export function buildDcqlQuery(): DcqlQuery {
           { path: ['address', 'locality'] },
         ],
       },
-      {
-        id: 'pid-mso-mdoc',
-        format: 'mso_mdoc',
-        meta: {
-          doctype_value: 'eu.europa.ec.eudi.pid.1',
-        },
-        claims: [
-          { path: ['eu.europa.ec.eudi.pid.1', 'given_name'] },
-          { path: ['eu.europa.ec.eudi.pid.1', 'family_name'] },
-          { path: ['eu.europa.ec.eudi.pid.1', 'birth_date'] },
-          { path: ['eu.europa.ec.eudi.pid.1', 'resident_street'] },
-          { path: ['eu.europa.ec.eudi.pid.1', 'resident_postal_code'] },
-          { path: ['eu.europa.ec.eudi.pid.1', 'resident_city'] },
-        ],
-      },
     ],
-    // credential_sets: wallet can present either sd-jwt OR mdoc (not both required)
     credential_sets: [
       {
-        options: [['pid-sd-jwt'], ['pid-mso-mdoc']],
+        options: [['pid-sd-jwt']],
         required: true,
       },
     ],
