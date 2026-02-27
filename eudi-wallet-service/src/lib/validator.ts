@@ -55,6 +55,19 @@ async function validateStructure(
       return inner.vp_token as string
     }
 
+    // Case 2b: DCQL format – vp_token is an object mapping credential ID → array of credentials
+    // e.g. { "pid-sd-jwt": ["eyJ...~...~kbjwt"] }
+    if (inner.vp_token && typeof inner.vp_token === 'object') {
+      const dcql = inner.vp_token as Record<string, unknown>
+      for (const key of Object.keys(dcql)) {
+        const creds = dcql[key]
+        if (Array.isArray(creds) && creds.length > 0 && typeof creds[0] === 'string') {
+          console.log(`[Layer 1] DCQL vp_token: extracted credential from set "${key}"`)
+          return creds[0] as string
+        }
+      }
+    }
+
     // Case 3: JSON Serialized JWS – has `payload` field (base64url-encoded JWT payload)
     if (inner.payload && typeof inner.payload === 'string') {
       try {
