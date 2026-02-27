@@ -114,18 +114,19 @@ export async function createSignedJar(params: JarParams): Promise<string> {
       jwks: {
         keys: [ephemeralPublicKeyJwk],
       },
-      vp_formats_supported: {
+      // vp_formats (not vp_formats_supported) per OpenID4VP draft 20+ / HAIP
+      vp_formats: {
         'dc+sd-jwt': {
           'sd-jwt_alg_values': ['ES256'],
           'kb-jwt_alg_values': ['ES256'],
         },
         mso_mdoc: {
-          issuerauth_alg_values: [-7],
-          deviceauth_alg_values: [-7],
+          alg: ['ES256'],
         },
       },
-      // Capabilities list – matches the format used by the EUDI reference verifier
-      encrypted_response_enc_values_supported: ['A128GCM', 'A256GCM'],
+      // Required for direct_post.jwt: tells the wallet how to encrypt the VP Token response (JARM)
+      authorization_encrypted_response_alg: 'ECDH-ES',
+      authorization_encrypted_response_enc: 'A128GCM',
     },
   }
 
