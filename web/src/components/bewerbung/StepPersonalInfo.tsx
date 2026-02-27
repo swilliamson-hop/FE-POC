@@ -76,7 +76,7 @@ export function StepPersonalInfo({
         <h2 className="text-2xl font-bold text-gray-900">Persönliche Angaben</h2>
       </div>
 
-      <EudiWalletButton onPidReceived={handlePidReceived} />
+      <EudiWalletButton onPidReceived={onPidReceived} />
 
       <div className="relative flex items-center">
         <div className="flex-grow border-t border-gray-200" />
