@@ -20,7 +20,7 @@ function BewerbungContent() {
   const router = useRouter();
   const propertyId = searchParams.get('propertyId') || process.env.NEXT_PUBLIC_PROPERTY_ID || '300375578';
 
-  const { formState, updateField, updateFields, isLoaded } = useApplicationForm(propertyId);
+  const { formState, updateField, updateFields, resetForm, isLoaded } = useApplicationForm(propertyId);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [walletVerifiedFields, setWalletVerifiedFields] = useState<Set<string>>(new Set());
@@ -146,9 +146,20 @@ function BewerbungContent() {
       {/* Header */}
       <div className="sticky top-0 bg-page border-b border-gray-200 z-40">
         <div className="max-w-lg mx-auto px-4 py-4">
-          <h1 className="text-center font-semibold text-gray-900 mb-4">
-            Bewerbung erfassen
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="font-semibold text-gray-900">Bewerbung erfassen</h1>
+            <button
+              onClick={() => {
+                resetForm();
+                setWalletVerifiedFields(new Set());
+                setCurrentStep(1);
+                window.scrollTo(0, 0);
+              }}
+              className="text-xs text-gray-400 hover:text-gray-600 underline"
+            >
+              Neu starten
+            </button>
+          </div>
           <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
         </div>
       </div>
