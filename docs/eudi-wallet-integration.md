@@ -424,7 +424,6 @@ Wird in Feld-Labels eingebettet (alle Labels akzeptieren `React.ReactNode`):
 - [x] "Neu starten" Button im Header – setzt Formular, Wallet-Badges und Schritt zurück
 
 ### ⏳ Noch ausstehend / nice-to-have
-- [ ] **MdocSecurity18013 Workaround:** German Registrar CA auf Test-iPhone installieren (Einstellungen → Allgemein → Info → Zertifikatvertrauenseinstellungen → aktivieren). CA liegt unter `https://sandbox.eudi-wallet.org/api/ca`. Langfristig: SPRIND Wallet soll WRPAC Trust List nutzen.
 - [ ] Adressfelder testen sobald PID mit Adressdaten verfügbar (SPRIND Demo-PID hat aktuell keine)
 - [ ] `ready`-Zustand und `handleOpenWallet()` aus `EudiWalletButton.tsx` entfernen (Dead Code)
 - [ ] Für Prod: Redis statt In-Memory Session Store
