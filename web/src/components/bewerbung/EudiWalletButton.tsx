@@ -99,8 +99,9 @@ export function EudiWalletButton({ onPidReceived }: Props) {
       if (!resp.ok) throw new Error('Service nicht erreichbar')
       const data = await resp.json()
       if (mobile) {
-        // Mobile: show "Wallet öffnen" button first, then user taps to open deep link
-        setFlow({ status: 'ready', sessionId: data.sessionId, walletUrl: data.walletUrl, isMobile: true })
+        // Mobile: open wallet directly and start polling – no intermediate button needed
+        window.location.href = data.walletUrl
+        startPolling(data.sessionId, data.walletUrl, true)
       } else {
         // Desktop: start polling immediately as soon as QR code is shown
         startPolling(data.sessionId, data.walletUrl, false)
