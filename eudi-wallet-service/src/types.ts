@@ -9,6 +9,7 @@ export interface SessionState {
   status: 'pending' | 'complete' | 'error'
   pidClaims?: PidClaims
   errorMessage?: string
+  returnUrl?: string
 }
 
 export interface PidClaims {

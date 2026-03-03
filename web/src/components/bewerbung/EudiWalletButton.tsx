@@ -89,7 +89,11 @@ export function EudiWalletButton({ onPidReceived }: Props) {
   async function handleStart() {
     setFlow({ status: 'loading' })
     try {
-      const resp = await fetch(`${EUDI_SERVICE_URL}/initiate`, { method: 'POST' })
+      const resp = await fetch(`${EUDI_SERVICE_URL}/initiate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnUrl: window.location.origin }),
+      })
       if (!resp.ok) throw new Error('Service nicht erreichbar')
       const data = await resp.json()
       const mobile = isMobileDevice()

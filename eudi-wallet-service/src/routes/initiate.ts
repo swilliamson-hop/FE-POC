@@ -9,6 +9,15 @@ export async function handleInitiate(c: Context): Promise<Response> {
   const serviceUrl = process.env.SERVICE_URL!
   const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000'
 
+  // Optional: frontend can send its own origin so /done/ can redirect back
+  let returnUrl: string | undefined
+  try {
+    const body = await c.req.json<{ returnUrl?: string }>()
+    if (body.returnUrl) returnUrl = body.returnUrl
+  } catch {
+    // no body or not JSON – that's fine
+  }
+
   // Generate session ID and nonce
   const sessionId = randomUUID()
   const nonce = randomBytes(32).toString('base64url')
@@ -40,6 +49,7 @@ export async function handleInitiate(c: Context): Promise<Response> {
     createdAt: now,
     expiresAt: now + 10 * 60 * 1000, // 10 minutes
     status: 'pending',
+    returnUrl,
   })
 
   // Build the openid4vp:// URL
