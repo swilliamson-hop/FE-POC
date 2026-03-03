@@ -6,7 +6,7 @@ import { handleRequest } from './routes/request.js'
 import { handleCallback } from './routes/callback.js'
 import { handleResult } from './routes/result.js'
 import { loadTrustLists } from './lib/trustlist.js'
-import { getSessionById } from './lib/session.js'
+import { getReturnUrl } from './lib/session.js'
 
 const app = new Hono()
 
@@ -37,8 +37,7 @@ app.get('/result/:sessionId', handleResult)
 // Auto-redirects back to frontend if FRONTEND_URL is set, otherwise shows a completion message
 app.get('/done/:sessionId', (c) => {
   const sessionId = c.req.param('sessionId')
-  const session = getSessionById(sessionId)
-  const returnUrl = session?.returnUrl ?? process.env.FRONTEND_URL
+  const returnUrl = getReturnUrl(sessionId) ?? process.env.FRONTEND_URL
   const redirectScript = returnUrl
     ? `<script>setTimeout(() => { window.location.replace('${returnUrl}/bewerbung'); }, 1500);</script>`
     : ''

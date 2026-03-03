@@ -1,7 +1,7 @@
 import { generateKeyPair, exportJWK } from 'jose'
 import { randomBytes, randomUUID } from 'node:crypto'
 import type { Context } from 'hono'
-import { createSession } from '../lib/session.js'
+import { createSession, setReturnUrl } from '../lib/session.js'
 import { createSignedJar, computeClientId } from '../lib/jar.js'
 import type { InitiateResponse } from '../types.js'
 
@@ -49,8 +49,9 @@ export async function handleInitiate(c: Context): Promise<Response> {
     createdAt: now,
     expiresAt: now + 10 * 60 * 1000, // 10 minutes
     status: 'pending',
-    returnUrl,
   })
+
+  if (returnUrl) setReturnUrl(sessionId, returnUrl)
 
   // Build the openid4vp:// URL
   // client_id uses x509_hash scheme (required by HAIP / SPRIND wallet)

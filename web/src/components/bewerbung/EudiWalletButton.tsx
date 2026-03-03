@@ -89,14 +89,15 @@ export function EudiWalletButton({ onPidReceived }: Props) {
   async function handleStart() {
     setFlow({ status: 'loading' })
     try {
+      const mobile = isMobileDevice()
       const resp = await fetch(`${EUDI_SERVICE_URL}/initiate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ returnUrl: window.location.origin }),
+        // Only send returnUrl on mobile – desktop QR flow runs on localhost which the phone can't reach
+        body: JSON.stringify({ returnUrl: mobile ? window.location.origin : undefined }),
       })
       if (!resp.ok) throw new Error('Service nicht erreichbar')
       const data = await resp.json()
-      const mobile = isMobileDevice()
       if (mobile) {
         // Mobile: show "Wallet öffnen" button first, then user taps to open deep link
         setFlow({ status: 'ready', sessionId: data.sessionId, walletUrl: data.walletUrl, isMobile: true })
