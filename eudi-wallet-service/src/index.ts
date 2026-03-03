@@ -33,8 +33,16 @@ app.post('/callback/:sessionId', handleCallback)
 app.get('/result/:sessionId', handleResult)
 
 // Wallet redirect landing page – opened by wallet browser after presentation
-// Redirects back to frontend if accessible, otherwise shows a completion message
+// Auto-redirects back to frontend if FRONTEND_URL is set, otherwise shows a completion message
 app.get('/done/:sessionId', (c) => {
+  const frontendUrl = process.env.FRONTEND_URL
+  const redirectScript = frontendUrl
+    ? `<script>setTimeout(() => { window.location.replace('${frontendUrl}/bewerbung'); }, 1500);</script>`
+    : ''
+  const subtext = frontendUrl
+    ? 'Sie werden gleich zurückgeleitet...'
+    : 'Ihre Daten wurden erfolgreich übertragen.<br>Sie können dieses Fenster schließen.'
+
   return c.html(`<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -48,12 +56,13 @@ app.get('/done/:sessionId', (c) => {
     h1 { color: #166534; font-size: 1.25rem; margin: 0 0 .5rem; }
     p { color: #4b5563; font-size: .9rem; margin: 0; }
   </style>
+  ${redirectScript}
 </head>
 <body>
   <div class="card">
     <div class="icon">✅</div>
     <h1>Authentifizierung abgeschlossen</h1>
-    <p>Ihre Daten wurden erfolgreich übertragen.<br>Sie können dieses Fenster schließen.</p>
+    <p>${subtext}</p>
   </div>
 </body>
 </html>`)
