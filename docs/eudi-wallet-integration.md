@@ -1,6 +1,6 @@
 # EUDI Wallet Integration – Projektdokumentation
 
-> **Stand:** Februar 2026
+> **Stand:** März 2026
 > **Zweck:** Diese Datei dokumentiert alles, was gebaut wurde, warum, wie es funktioniert und wo wir im Prozess stehen. Zum schnellen Wiedereinstieg nach einer längeren Pause.
 
 ---
@@ -44,9 +44,8 @@ web/ (Next.js, localhost:3000)      eudi-wallet-service/ (Railway)
          |                                      |
   Desktop: QR-Code anzeigen                     |
            startet sofort polling               |
-  Mobile:  "Wallet öffnen" Button               |
-           → öffnet Deep Link                   |
-           → startet polling                    |
+  Mobile:  öffnet Wallet Deep Link direkt       |
+           startet sofort polling               |
                                                 |
   [User scannt QR / öffnet Deep Link]           |
   Wallet-App ──GET /request/:id──────────────>  |  liefert signierten JAR (JWT)
@@ -62,7 +61,7 @@ web/ (Next.js, localhost:3000)      eudi-wallet-service/ (Railway)
 
 **Zwei Flows:**
 - **QR Code (Cross-Device):** Desktop zeigt QR, User scannt mit Wallet-App auf Handy. Desktop startet sofort mit Polling.
-- **Deep Link (Same-Device):** Mobile zeigt "Wallet öffnen" Button → Wallet wird geöffnet, User tippt auf Button, Polling startet danach.
+- **Deep Link (Same-Device):** Mobile öffnet den `openid4vp://` Deep Link direkt in `handleStart()` (kein zweiter "Wallet öffnen" Button) und startet sofort Polling. Nach Wallet-Präsentation: Wallet öffnet `/done/:id` → `window.close()` schließt den Tab → Bewerbungs-Tab kommt in den Vordergrund.
 - Frontend erkennt Gerät automatisch (User Agent).
 
 ---
@@ -163,8 +162,12 @@ Wallet-App schickt den VP Token hierhin.
 Die Wallet-App lädt diese URL → zeigt statische Erfolgsseite ("Authentifizierung abgeschlossen"). Kein Redirect zurück zum Frontend.
 
 ### `GET /done/:sessionId`
-Statische HTML-Seite (grüne Erfolgsmeldung). Wird vom Wallet-Browser nach Präsentation geöffnet.
-**Wichtig:** Kein JS-Redirect – die Seite bleibt stehen, damit das Handy keine "Connection refused"-Seite sieht.
+Wird vom Wallet-Browser nach Präsentation geöffnet. Verhalten je nach Flow:
+
+- **Same-Device:** Falls ein `returnUrl` für die Session gesetzt ist (d.h. Mobile hat `returnUrl` beim `/initiate` mitgeschickt) → `window.close()` im `<head>` der Seite schließt den Tab sofort → der Bewerbungs-Tab kommt wieder in den Vordergrund.
+- **Cross-Device:** Kein `returnUrl` → statische grüne Erfolgsseite ("Ihre Daten wurden erfolgreich übertragen. Sie können dieses Fenster schließen.")
+
+**Technischer Hintergrund:** `returnUrl` wird in einer separaten `returnUrls`-Map (mit 15-min TTL) gespeichert, die unabhängig vom Session-Lifecycle ist. So überlebt sie auch, wenn das Frontend-Polling `/result/` bereits die Session gelöscht hat.
 
 ### `GET /result/:sessionId`
 Frontend pollt diesen Endpunkt alle 2 Sekunden.
@@ -194,6 +197,8 @@ interface SessionState {
 ```
 
 Sessions werden im RAM gespeichert (Map). Alle 5 Minuten werden abgelaufene Sessions bereinigt. Für Prod: Redis verwenden.
+
+**Separate `returnUrls`-Map:** `returnUrl` (mobile Rückkehr-URL) wird in einer eigenen `Map<sessionId, string>` gespeichert, die sich automatisch nach 15 Minuten bereinigt. Dadurch überlebt die `returnUrl` die Session-Löschung durch `/result/` – `/done/` kann sie auch dann noch lesen, wenn das Frontend die Session bereits abgeholt hat.
 
 ---
 
@@ -225,8 +230,8 @@ address.locality         → city               (StepContactInfo)    → Schritt
 | `CERT_CHAIN` | PEM Certificate Chain vom EUDI Sandbox (Leaf + Intermediate CA!) |
 | `CLIENT_ID` | Nicht mehr als eigene Env-Variable nötig – wird automatisch via `computeClientId()` aus `CERT_CHAIN` berechnet (`x509_hash:<base64url(sha256(leaf_cert_DER))>`) |
 | `SERVICE_URL` | Öffentliche Railway-URL (z.B. `https://fe-poc-production.up.railway.app`) |
-| `FRONTEND_URL` | Frontend-URL (aktuell nicht mehr für Redirect genutzt, war Same-Device Rückkehr) |
-| `ALLOWED_ORIGINS` | CORS-Origins (kommagetrennt, z.B. `http://localhost:3000`) |
+| `FRONTEND_URL` | Frontend-URL – wird im JAR als Teil der `redirect_uri` Konfiguration verwendet |
+| `ALLOWED_ORIGINS` | CORS-Whitelist – steuert welche Frontend-Ursprünge den Service aufrufen dürfen (kommagetrennt, z.B. `http://localhost:3000,https://meine-app.vercel.app`) |
 | `TRUST_LIST_URL` | `https://bmi.usercontent.opencode.de/eudi-wallet/test-trust-lists/` |
 | `PORT` | Wird von Railway gesetzt (8080) – NICHT manuell setzen |
 
@@ -271,24 +276,27 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 idle → loading → polling → success
                          ↘ error
-     (Desktop: kein "ready" – sofort polling)
-
-idle → loading → ready (Mobile: zeigt "Wallet öffnen" Button)
-                      → polling → success
-                                ↘ error
+     (Desktop und Mobile: kein "ready" – sofort polling)
 ```
 
 - **idle:** EUDIW Logo + Button "Mit EU Digital Identity Wallet ausfüllen"
-- **loading:** Ruft `POST /initiate` auf
-- **ready (nur Mobile):** "Wallet öffnen" Button → `window.location.href = walletUrl`
+- **loading:** Ruft `POST /initiate` auf; Mobile öffnet gleichzeitig `window.location.href = walletUrl`
 - **polling (Desktop):** Sofort nach `POST /initiate` – zeigt QR-Code + Spinner
-- **polling (Mobile):** Nach Tap auf "Wallet öffnen" – zeigt Spinner
+- **polling (Mobile):** Sofort nach `window.location.href = walletUrl` – zeigt Spinner ("Warte auf Freigabe in der Wallet...")
 - **success:** Grünes Banner, `onPidReceived()` wird aufgerufen
 - **error:** Rotes Banner mit Retry-Option
 
+*Hinweis:* Der `ready`-Zustand existiert noch als TypeScript-Typ, wird aber nicht mehr erreicht – er ist totes Codepfad-Relikt.
+
 ### Same-Device Rückkehr
 
-Nach Wallet-Präsentation leitet die Wallet zur `redirect_uri` weiter – das ist `/done/:sessionId` auf dem Service (nicht mehr das Frontend). Die Seite zeigt eine statische Erfolgsmeldung. Das Frontend erkennt den Abschluss nur über Polling, nicht über URL-Parameter. (Der `wallet_session` URL-Parameter-Mechanismus ist im Code noch vorhanden als Fallback, wird im aktuellen Flow aber nicht genutzt.)
+1. Mobile sendet beim `/initiate`-Aufruf `returnUrl: window.location.origin` (z.B. `http://192.168.1.100:3000`)
+2. Service speichert diese URL in der separaten `returnUrls`-Map
+3. Nach Wallet-Präsentation öffnet die Wallet die `redirect_uri` → `/done/:sessionId`
+4. Der Service prüft: `!!getReturnUrl(sessionId)` → falls `true` (same-device): HTML-Seite mit `window.close()` in `<head>` → Tab schließt sich sofort → Bewerbungs-Tab kommt in den Vordergrund
+5. Das Frontend erkennt den Abschluss über Polling (`GET /result/:id`) – nicht über URL-Parameter
+
+*Fallback:* Der `wallet_session` URL-Parameter-Mechanismus ist im Code noch vorhanden (`useEffect` in `EudiWalletButton.tsx`), wird im aktuellen Flow aber nicht genutzt.
 
 ---
 
@@ -370,9 +378,25 @@ Wird in Feld-Labels eingebettet (alle Labels akzeptieren `React.ReactNode`):
 **Problem:** `StepContactInfo` hält einen lokalen `streetQuery`-State für das Straßen-Eingabefeld (Autocomplete). Der wird beim Mount mit dem `street`-Prop initialisiert, aber wenn die Wallet nachträglich `street` setzt, blieb `streetQuery` veraltet → Straße wurde nicht im Feld angezeigt.
 **Fix:** `useEffect(() => setStreetQuery(street), [street])` in `StepContactInfo`.
 
+### 15. Same-Device: Erfolgsseite öffnete in neuem Tab, Bewerbungs-Tab blieb im Hintergrund
+**Problem:** Nach Wallet-Präsentation öffnete die Wallet die `redirect_uri` in einem neuen Safari-Tab. User sah eine Erfolgsseite, musste den Tab manuell schließen um zurück zur Bewerbung zu kommen.
+**Fix:** `/done/:sessionId` gibt für same-device eine HTML-Seite mit `<script>window.close();</script>` im `<head>` zurück. Das Script läuft bevor die Seite gerendert wird → Tab schließt sich sofort → Bewerbungs-Tab kommt in den Vordergrund.
+
+### 16. Cross-Device: Handy wurde auf localhost weitergeleitet
+**Problem:** Desktop sendete `returnUrl: window.location.origin = "http://localhost:3000"` beim `/initiate`-Aufruf. Das Handy (das die Wallet bedient) öffnete `/done/` → Service redirectete auf localhost → Handy konnte localhost nicht erreichen → weiße "Connection refused"-Seite.
+**Fix:** `returnUrl` wird nur auf Mobile-Geräten mitgesendet (`isMobileDevice()` Check vor dem Fetch-Body). Desktop sendet kein `returnUrl`.
+
+### 17. Race Condition: Session gelöscht bevor `/done/` returnUrl lesen konnte
+**Problem:** Frontend pollt `/result/` alle 2s. Sobald Polling die complete-Session findet, löscht `deleteSession()` sie. Falls `/done/` danach aufgerufen wird (Wallet öffnet URL erst nach Polling), ist `session?.returnUrl` undefined → kein Redirect/close.
+**Fix:** `returnUrl` in eine separate `returnUrls`-Map ausgelagert (mit eigenem 15-min TTL), vollständig unabhängig vom Session-Lifecycle. `getReturnUrl(sessionId)` funktioniert auch noch lange nach `deleteSession()`.
+
+### 18. Redundanter "Wallet öffnen" Button auf Mobile
+**Problem:** Nach Klick auf "Mit EU Digital Identity Wallet ausfüllen" erschien auf Mobile ein zweiter Button "Wallet öffnen" (der `ready`-Zustand). Zwei Klicks für eine Aktion ist schlechte UX.
+**Fix:** In `handleStart()` öffnet Mobile direkt `window.location.href = data.walletUrl` und ruft sofort `startPolling()` auf. Der `ready`-Zustand wird nicht mehr gesetzt (ist Dead Code).
+
 ---
 
-## Aktueller Stand (Februar 2026)
+## Aktueller Stand (März 2026)
 
 ### ✅ Erledigt
 - [x] `eudi-wallet-service/` vollständig implementiert (alle 4 Routes + `/done/`, 7-Layer-Validator, PID-Extraktion)
@@ -393,11 +417,16 @@ Wird in Feld-Labels eingebettet (alle Labels akzeptieren `React.ReactNode`):
 - [x] `PRIVATE_KEY` aus `web/.env.local` entfernt (Sicherheit)
 - [x] `CERT_CHAIN` mit Intermediate CA (German Registrar) ergänzt
 - [x] Handy zeigt nach Wallet-Präsentation korrekte Erfolgsseite (kein localhost-Redirect)
+- [x] **Same-Device Flow** erfolgreich getestet (lokale IP-Adresse des Macs, kein ngrok nötig)
+- [x] Same-Device: `window.close()` schließt Wallet-Tab sofort → Bewerbungs-Tab kommt in den Vordergrund ✓
+- [x] Same-Device: Kein redundanter "Wallet öffnen" Button – Wallet öffnet direkt beim ersten Klick ✓
+- [x] `returnUrls`-Map mit eigenem 15-min TTL (Race-Condition-fix: unabhängig von Session-Lifecycle)
+- [x] "Neu starten" Button im Header – setzt Formular, Wallet-Badges und Schritt zurück
 
 ### ⏳ Noch ausstehend / nice-to-have
 - [ ] **MdocSecurity18013 Workaround:** German Registrar CA auf Test-iPhone installieren (Einstellungen → Allgemein → Info → Zertifikatvertrauenseinstellungen → aktivieren). CA liegt unter `https://sandbox.eudi-wallet.org/api/ca`. Langfristig: SPRIND Wallet soll WRPAC Trust List nutzen.
-- [ ] Same-Device Flow auf realem Gerät testen (braucht Frontend auf öffentlicher URL, z.B. Vercel)
 - [ ] Adressfelder testen sobald PID mit Adressdaten verfügbar (SPRIND Demo-PID hat aktuell keine)
+- [ ] `ready`-Zustand und `handleOpenWallet()` aus `EudiWalletButton.tsx` entfernen (Dead Code)
 - [ ] Für Prod: Redis statt In-Memory Session Store
 
 ---
