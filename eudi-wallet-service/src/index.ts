@@ -34,17 +34,25 @@ app.post('/callback/:sessionId', handleCallback)
 app.get('/result/:sessionId', handleResult)
 
 // Wallet redirect landing page – opened by wallet browser after presentation
-// Auto-redirects back to frontend if FRONTEND_URL is set, otherwise shows a completion message
+// Same-device: closes this tab immediately so the original Bewerbung tab comes to front
+// Cross-device: shows a static success message (phone user has nothing more to do)
 app.get('/done/:sessionId', (c) => {
   const sessionId = c.req.param('sessionId')
-  const returnUrl = getReturnUrl(sessionId) ?? process.env.FRONTEND_URL
-  const redirectScript = returnUrl
-    ? `<script>setTimeout(() => { window.location.replace('${returnUrl}/bewerbung'); }, 1500);</script>`
-    : ''
-  const subtext = returnUrl
-    ? 'Sie werden gleich zurückgeleitet...'
-    : 'Ihre Daten wurden erfolgreich übertragen.<br>Sie können dieses Fenster schließen.'
+  const isSameDevice = !!getReturnUrl(sessionId)
 
+  if (isSameDevice) {
+    // Close this tab – the Bewerbung tab is still open in the background with the data filled in
+    return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <script>window.close();</script>
+</head>
+<body></body>
+</html>`)
+  }
+
+  // Cross-device: static success message for the phone
   return c.html(`<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -58,13 +66,12 @@ app.get('/done/:sessionId', (c) => {
     h1 { color: #166534; font-size: 1.25rem; margin: 0 0 .5rem; }
     p { color: #4b5563; font-size: .9rem; margin: 0; }
   </style>
-  ${redirectScript}
 </head>
 <body>
   <div class="card">
     <div class="icon">✅</div>
     <h1>Authentifizierung abgeschlossen</h1>
-    <p>${subtext}</p>
+    <p>Ihre Daten wurden erfolgreich übertragen.<br>Sie können dieses Fenster schließen.</p>
   </div>
 </body>
 </html>`)
