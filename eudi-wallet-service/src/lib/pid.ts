@@ -51,6 +51,9 @@ export function extractPidClaims(credential: string): PidClaims {
   // Get selectively disclosed claims
   const disclosed = extractDisclosedClaims(credential)
 
+  console.log('[PID] Disclosed claim names:', Object.keys(disclosed))
+  console.log('[PID] Disclosed claims:', JSON.stringify(disclosed, null, 2))
+
   // Merge: disclosed claims take precedence over issuer payload claims
   const claims = { ...issuerPayload, ...disclosed }
 
@@ -60,13 +63,18 @@ export function extractPidClaims(credential: string): PidClaims {
   // separate top-level disclosures. Check both locations.
   let address: Record<string, unknown> = {}
   if (claims.address && typeof claims.address === 'object') {
+    console.log('[PID] address object:', JSON.stringify(claims.address, null, 2))
     address = claims.address as Record<string, unknown>
+  } else {
+    console.log('[PID] No address object found. claims.address =', claims.address)
   }
 
   const streetAddress = address.street_address ?? claims.street_address
   const postalCode = address.postal_code ?? claims.postal_code
   const locality = address.locality ?? claims.locality
   const country = address.country ?? claims.country
+
+  console.log('[PID] Extracted address fields:', { streetAddress, postalCode, locality, country })
 
   // Build PidClaims
   const pidClaims: PidClaims = {
