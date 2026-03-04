@@ -54,20 +54,29 @@ export function extractPidClaims(credential: string): PidClaims {
   // Merge: disclosed claims take precedence over issuer payload claims
   const claims = { ...issuerPayload, ...disclosed }
 
-  // Extract address (may itself be a disclosed object)
-  let address: Record<string, string> = {}
+  // Extract address sub-fields.
+  // With recursive SD-JWT disclosure, the `address` object may contain `_sd` hashes
+  // while the actual sub-fields (street_address, locality, postal_code) appear as
+  // separate top-level disclosures. Check both locations.
+  let address: Record<string, unknown> = {}
   if (claims.address && typeof claims.address === 'object') {
-    address = claims.address as Record<string, string>
+    address = claims.address as Record<string, unknown>
   }
+
+  const streetAddress = address.street_address ?? claims.street_address
+  const postalCode = address.postal_code ?? claims.postal_code
+  const locality = address.locality ?? claims.locality
+  const country = address.country ?? claims.country
 
   // Build PidClaims
   const pidClaims: PidClaims = {
     given_name: String(claims.given_name ?? ''),
     family_name: String(claims.family_name ?? ''),
     birthdate: String(claims.birthdate ?? ''),
-    street_address: address.street_address ? String(address.street_address) : undefined,
-    postal_code: address.postal_code ? String(address.postal_code) : undefined,
-    locality: address.locality ? String(address.locality) : undefined,
+    street_address: streetAddress ? String(streetAddress) : undefined,
+    postal_code: postalCode ? String(postalCode) : undefined,
+    locality: locality ? String(locality) : undefined,
+    country: country ? String(country) : undefined,
   }
 
   return pidClaims
