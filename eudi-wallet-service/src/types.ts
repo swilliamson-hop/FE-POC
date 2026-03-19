@@ -57,6 +57,7 @@ export interface DcqlCredential {
 }
 
 export interface DcqlClaim {
+  id?: string
   path: (string | number)[]
 }
 
