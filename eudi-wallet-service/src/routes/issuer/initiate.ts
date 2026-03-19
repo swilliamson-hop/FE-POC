@@ -42,18 +42,7 @@ export async function handleIssuanceInitiate(c: Context): Promise<Response> {
   })
 
   const now = Date.now()
-  createSession(vpSessionId, {
-    nonce,
-    ephemeralPrivateKey: privateKey,
-    ephemeralPublicKeyJwk,
-    createdAt: now,
-    expiresAt: now + 10 * 60 * 1000,
-    status: 'pending',
-  })
-
-  if (returnUrl) setReturnUrl(vpSessionId, returnUrl)
-
-  // Create issuance session
+  // Create issuance session first so we can link it to the VP session
   const issuanceSessionId = randomUUID()
   const preAuthorizedCode = randomBytes(32).toString('base64url')
 
@@ -64,6 +53,18 @@ export async function handleIssuanceInitiate(c: Context): Promise<Response> {
     expiresAt: now + 15 * 60 * 1000,
     status: 'pending_pid',
   })
+
+  createSession(vpSessionId, {
+    nonce,
+    ephemeralPrivateKey: privateKey,
+    ephemeralPublicKeyJwk,
+    createdAt: now,
+    expiresAt: now + 10 * 60 * 1000,
+    status: 'pending',
+    issuanceSessionId,
+  })
+
+  if (returnUrl) setReturnUrl(vpSessionId, returnUrl)
 
   console.log(`[Issuer] Initiate: issuance=${issuanceSessionId} vp=${vpSessionId} type=${credentialType}`)
 

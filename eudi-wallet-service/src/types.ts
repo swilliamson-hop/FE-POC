@@ -9,6 +9,7 @@ export interface SessionState {
   status: 'pending' | 'complete' | 'error'
   pidClaims?: PidClaims
   errorMessage?: string
+  issuanceSessionId?: string       // set when VP session is part of issuance flow
 }
 
 export interface PidClaims {
@@ -100,5 +101,6 @@ export interface IssuanceInitiateResponse {
 
 export interface IssuanceResultResponse {
   status: IssuanceSessionState['status']
+  pidClaims?: PidClaims
   errorMessage?: string
 }

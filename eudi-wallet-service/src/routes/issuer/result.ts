@@ -18,12 +18,16 @@ export function handleIssuanceResult(c: Context): Response {
   }
 
   // Still in progress
-  if (
-    session.status === 'pending_pid' ||
-    session.status === 'pid_verified' ||
-    session.status === 'offer_created'
-  ) {
+  if (session.status === 'pending_pid' || session.status === 'offer_created') {
     return c.json<IssuanceResultResponse>({ status: session.status }, 202)
+  }
+
+  // PID verified – return claims so frontend can show preview
+  if (session.status === 'pid_verified') {
+    return c.json<IssuanceResultResponse>({
+      status: session.status,
+      pidClaims: session.pidClaims,
+    })
   }
 
   if (session.status === 'error') {

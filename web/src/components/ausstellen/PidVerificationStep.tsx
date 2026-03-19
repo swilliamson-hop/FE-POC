@@ -11,8 +11,7 @@ const POLL_TIMEOUT_MS = 3 * 60 * 1000
 type FlowState =
   | { status: 'idle' }
   | { status: 'loading' }
-  | { status: 'polling'; vpSessionId: string; issuanceSessionId: string; walletUrl: string; isMobile: boolean }
-  | { status: 'linking'; issuanceSessionId: string; vpSessionId: string }
+  | { status: 'polling'; issuanceSessionId: string; walletUrl: string; isMobile: boolean }
   | { status: 'success'; pidClaims: PidClaims; issuanceSessionId: string }
   | { status: 'error'; message: string }
 
@@ -40,39 +39,20 @@ export function PidVerificationStep({ credentialType, onPidVerified }: Props) {
 
   useEffect(() => () => stopPolling(), [stopPolling])
 
-  async function linkPidAndFinish(issuanceSessionId: string, vpSessionId: string) {
-    setFlow({ status: 'linking', issuanceSessionId, vpSessionId })
-    try {
-      const resp = await fetch(`${EUDI_SERVICE_URL}/issuer/link-pid`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ issuanceSessionId, vpSessionId }),
-      })
-      const data = await resp.json()
-      if (resp.ok && data.pidClaims) {
-        setFlow({ status: 'success', pidClaims: data.pidClaims, issuanceSessionId })
-        onPidVerified(data.pidClaims, issuanceSessionId)
-      } else {
-        setFlow({ status: 'error', message: data.error ?? 'PID-Verknüpfung fehlgeschlagen' })
-      }
-    } catch {
-      setFlow({ status: 'error', message: 'Verbindung zum Service fehlgeschlagen' })
-    }
-  }
-
-  function startPolling(vpSessionId: string, issuanceSessionId: string, walletUrl: string, isMobile: boolean) {
-    setFlow({ status: 'polling', vpSessionId, issuanceSessionId, walletUrl, isMobile })
+  function startPolling(issuanceSessionId: string, walletUrl: string, isMobile: boolean) {
+    setFlow({ status: 'polling', issuanceSessionId, walletUrl, isMobile })
 
     pollRef.current = setInterval(async () => {
       try {
-        const resp = await fetch(`${EUDI_SERVICE_URL}/result/${vpSessionId}`)
+        const resp = await fetch(`${EUDI_SERVICE_URL}/issuer/result/${issuanceSessionId}`)
         if (resp.status === 202) return
 
         stopPolling()
         const data = await resp.json()
 
-        if (resp.ok && data.status === 'complete' && data.pidClaims) {
-          await linkPidAndFinish(issuanceSessionId, vpSessionId)
+        if (resp.ok && data.status === 'pid_verified' && data.pidClaims) {
+          setFlow({ status: 'success', pidClaims: data.pidClaims, issuanceSessionId })
+          onPidVerified(data.pidClaims, issuanceSessionId)
         } else {
           setFlow({ status: 'error', message: data.errorMessage ?? 'PID-Verifikation fehlgeschlagen' })
         }
@@ -105,7 +85,7 @@ export function PidVerificationStep({ credentialType, onPidVerified }: Props) {
       if (mobile) {
         window.location.href = data.walletUrl
       }
-      startPolling(data.vpSessionId, data.sessionId, data.walletUrl, mobile)
+      startPolling(data.sessionId, data.walletUrl, mobile)
     } catch {
       setFlow({ status: 'error', message: 'EUDI Wallet Service nicht erreichbar.' })
     }
@@ -159,11 +139,11 @@ export function PidVerificationStep({ credentialType, onPidVerified }: Props) {
     )
   }
 
-  if (flow.status === 'loading' || flow.status === 'linking') {
+  if (flow.status === 'loading') {
     return (
       <div className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-600">
         <span className="animate-spin">&#x27F3;</span>
-        {flow.status === 'loading' ? 'Verbinde mit EUDI Wallet...' : 'Verknüpfe PID-Daten...'}
+        Verbinde mit EUDI Wallet...
       </div>
     )
   }

@@ -1,5 +1,6 @@
 import type { Context } from 'hono'
 import { getSessionById, updateSession, isSessionExpired } from '../lib/session.js'
+import { getIssuanceSession, updateIssuanceSession } from '../lib/issuance-session.js'
 import { validateVpToken, ValidationError } from '../lib/validator.js'
 
 export async function handleCallback(c: Context): Promise<Response> {
@@ -47,6 +48,18 @@ export async function handleCallback(c: Context): Promise<Response> {
     })
 
     console.log(`[Callback] Session ${sessionId} complete – PID received for ${pidClaims.given_name} ${pidClaims.family_name}`)
+
+    // If this VP session is part of an issuance flow, auto-link PID to issuance session
+    if (session.issuanceSessionId) {
+      const issuanceSession = getIssuanceSession(session.issuanceSessionId)
+      if (issuanceSession && issuanceSession.status === 'pending_pid') {
+        updateIssuanceSession(session.issuanceSessionId, {
+          pidClaims,
+          status: 'pid_verified',
+        })
+        console.log(`[Issuer] PID auto-linked: ${pidClaims.given_name} ${pidClaims.family_name} → issuance ${session.issuanceSessionId}`)
+      }
+    }
 
     // Redirect wallet browser to /done/ page (works on phone for both QR and same-device flows)
     // /done/ page shows a success message and attempts JS redirect to the frontend
