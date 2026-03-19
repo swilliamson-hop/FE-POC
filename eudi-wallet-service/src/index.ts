@@ -7,6 +7,14 @@ import { handleCallback } from './routes/callback.js'
 import { handleResult } from './routes/result.js'
 import { loadTrustLists } from './lib/trustlist.js'
 import { getReturnUrl } from './lib/session.js'
+import { handleIssuerMetadata, handleAuthServerMetadata } from './routes/issuer/metadata.js'
+import { handleIssuanceInitiate } from './routes/issuer/initiate.js'
+import { handleLinkPid } from './routes/issuer/pid-callback.js'
+import { handleCreateOffer, handleGetOffer } from './routes/issuer/offer.js'
+import { handleToken } from './routes/issuer/token.js'
+import { handleCredential } from './routes/issuer/credential.js'
+import { handleNonce } from './routes/issuer/nonce.js'
+import { handleIssuanceResult } from './routes/issuer/result.js'
 
 const app = new Hono()
 
@@ -32,6 +40,20 @@ app.post('/initiate', handleInitiate)
 app.get('/request/:sessionId', handleRequest)
 app.post('/callback/:sessionId', handleCallback)
 app.get('/result/:sessionId', handleResult)
+
+// OpenID4VCI Issuer – Well-known metadata
+app.get('/.well-known/openid-credential-issuer', handleIssuerMetadata)
+app.get('/.well-known/oauth-authorization-server', handleAuthServerMetadata)
+
+// OpenID4VCI Issuer – Issuance flow
+app.post('/issuer/initiate', handleIssuanceInitiate)
+app.post('/issuer/link-pid', handleLinkPid)
+app.post('/issuer/create-offer/:sessionId', handleCreateOffer)
+app.get('/issuer/offer/:sessionId', handleGetOffer)
+app.post('/issuer/token', handleToken)
+app.post('/issuer/credential', handleCredential)
+app.post('/issuer/nonce', handleNonce)
+app.get('/issuer/result/:sessionId', handleIssuanceResult)
 
 // Wallet redirect landing page – opened by wallet browser after presentation
 // Same-device: closes this tab immediately so the original Bewerbung tab comes to front

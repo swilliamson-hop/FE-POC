@@ -58,3 +58,47 @@ export interface DcqlCredential {
 export interface DcqlClaim {
   path: (string | number)[]
 }
+
+// === OpenID4VCI Issuance Types ===
+
+export type CredentialType = 'wohnungsgeberbestaetigung' | 'genossenschaft-mitglied'
+
+export interface IssuanceSessionState {
+  credentialType: CredentialType
+  preAuthorizedCode: string
+  accessToken?: string
+  cNonce?: string
+  cNonceExpiresAt?: number
+  pidClaims?: PidClaims
+  holderPublicKeyJwk?: JWK
+  createdAt: number
+  expiresAt: number
+  status: 'pending_pid' | 'pid_verified' | 'offer_created' | 'issued' | 'error'
+  errorMessage?: string
+}
+
+export interface CredentialOfferObject {
+  credential_issuer: string
+  credential_configuration_ids: string[]
+  grants: {
+    'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
+      'pre-authorized_code': string
+    }
+  }
+}
+
+export interface IssuanceInitiateRequest {
+  credentialType: CredentialType
+  returnUrl?: string
+}
+
+export interface IssuanceInitiateResponse {
+  sessionId: string
+  vpSessionId: string
+  walletUrl: string
+}
+
+export interface IssuanceResultResponse {
+  status: IssuanceSessionState['status']
+  errorMessage?: string
+}

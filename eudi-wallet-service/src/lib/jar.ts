@@ -6,7 +6,7 @@ import type { DcqlQuery } from '../types.js'
 const SERVICE_URL = process.env.SERVICE_URL!
 
 // Parse PEM certificate chain into array of base64 DER strings (for x5c header)
-function parseCertChain(certChainPem: string): string[] {
+export function parseCertChain(certChainPem: string): string[] {
   const certs: string[] = []
   const regex = /-----BEGIN CERTIFICATE-----\r?\n([\s\S]+?)\r?\n-----END CERTIFICATE-----/g
   let match
