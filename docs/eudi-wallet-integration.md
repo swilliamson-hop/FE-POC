@@ -7,6 +7,10 @@
 
 ## Was wird gebaut?
 
+Zwei POCs (Proof of Concepts) rund um das EU Digital Identity Wallet (EUDI Wallet):
+
+### POC 1: Bewerbungsformular (OpenID4VP – Lesen aus dem Wallet)
+
 Immomio POC – eine Wohnungsbewerber-App mit 5-Schritt-Formular. Ziel: Nutzer können ihre persönlichen Daten **automatisch aus einem EU Digital Identity Wallet** (EUDI Wallet) befüllen lassen, statt sie manuell einzutippen.
 
 Die Daten kommen als **PID (Person Identification Data)** aus dem Wallet – kryptografisch signiert, verifiziert von einer staatlichen Stelle (in DE: Bundesdruckerei). Das schafft Vertrauen für den Vermieter.
@@ -14,6 +18,16 @@ Die Daten kommen als **PID (Person Identification Data)** aus dem Wallet – kry
 **Protokoll:** OpenID for Verifiable Presentations (OpenID4VP), gemäß eIDAS 2.0 / ARF
 
 **Status: ✅ End-to-End funktioniert** – Wallet-Präsentation wird erfolgreich empfangen, validiert und die PID-Daten werden ins Formular übernommen.
+
+### POC 2: Credential-Ausstellung (OpenID4VCI – Schreiben ins Wallet)
+
+Frontend unter `/ausstellen`, zwei Credential-Typen: **Wohnungsgeberbestätigung** und **Genossenschafts-Mitgliedsbescheinigung**.
+
+**Flow:** PID-Verifizierung (bestehender OpenID4VP-Flow) → Credential-Vorschau → Ausstellung als SD-JWT-VC via `openid-credential-offer://`
+
+**Protokoll:** OpenID for Verifiable Credential Issuance (OpenID4VCI), Pre-Authorized Code Flow
+
+**Status: ⚠️ Backend + Frontend implementiert, wartet auf SPRIND Wallet Update.** Die Wallet hat das Credential Offer korrekt abgerufen, stürzt aber intern ab. SPRIND hat bestätigt, dass Issuance in v0.2.0 noch nicht ausgereift ist – vollständiger Feature-Support kommt im nächsten Sprint.
 
 ---
 
@@ -64,6 +78,49 @@ web/ (Next.js, localhost:3000)      eudi-wallet-service/ (Railway)
 - **Deep Link (Same-Device):** Mobile öffnet den `openid4vp://` Deep Link direkt in `handleStart()` (kein zweiter "Wallet öffnen" Button) und startet sofort Polling. Nach Wallet-Präsentation: Wallet öffnet `/done/:id` → `window.close()` schließt den Tab → Bewerbungs-Tab kommt in den Vordergrund.
 - Frontend erkennt Gerät automatisch (User Agent).
 
+### Architektur / Ablauf – Credential-Ausstellung (OpenID4VCI)
+
+```
+/ausstellen (Next.js)                eudi-wallet-service/ (Railway)
+         |                                      |
+  Credential-Typ auswählen                      |
+  → /ausstellen/[type]                          |
+         |                                      |
+  Schritt 1: Identität verifizieren             |
+         |── POST /issuer/initiate ──────────>  |  erstellt VP-Session (PID) + Issuance-Session
+         |<── { sessionId, vpSessionId,         |  verknüpft VP-Session mit Issuance-Session
+         |      walletUrl } ────────────────── |
+         |                                      |
+  QR-Code / Deep Link (openid4vp://)            |
+  Polling: GET /issuer/result/:id               |
+         |                                      |
+  Wallet ──GET /request/:vpId──────────────>    |  liefert JAR für PID-Anforderung
+  Wallet ──POST /callback/:vpId────────────>    |  PID validieren → auto-link zu Issuance-Session
+         |                                      |
+         |<── { status: pid_verified,           |  polling erkennt PID
+         |      pidClaims } ───────────────── |
+         |                                      |
+  Schritt 2: Credential-Vorschau anzeigen       |
+  (PID-Felder + Mock-Bescheinigungsdaten)       |
+         |                                      |
+  Schritt 3: "Weiter zur Ausstellung"           |
+         |── POST /issuer/create-offer/:id ──>  |  erstellt openid-credential-offer://
+         |<── { walletUrl } ──────────────────  |
+         |                                      |
+  QR-Code / Deep Link (openid-credential-offer://)|
+  Polling: GET /issuer/result/:id               |
+         |                                      |
+  Wallet ──GET /issuer/offer/:id───────────>    |  Credential Offer JSON (pre-auth code)
+  Wallet ──GET /.well-known/openid-credential-issuer──>  |  Issuer Metadata
+  Wallet ──GET /.well-known/oauth-authorization-server──>|  Auth Server Metadata
+  Wallet ──POST /issuer/token──────────────>    |  pre-auth code → access_token + c_nonce
+  Wallet ──POST /issuer/credential─────────>    |  proof-of-possession → SD-JWT-VC
+         |                                      |
+         |<── { status: issued } ─────────────  |  polling erkennt Ausstellung
+         |                                      |
+  Schritt 4: Erfolg anzeigen
+```
+
 ---
 
 ## Dateistruktur
@@ -79,8 +136,19 @@ eudi-wallet-service/
 │   │   ├── request.ts          – GET /request/:sessionId: signierten JAR liefern
 │   │   ├── callback.ts         – POST /callback/:sessionId: VP Token empfangen & validieren
 │   │   └── result.ts           – GET /result/:sessionId: PID-Claims abrufen (polling)
+│   │   └── issuer/             – OpenID4VCI Issuer-Endpunkte
+│   │       ├── metadata.ts     – GET /.well-known/openid-credential-issuer + oauth-authorization-server
+│   │       ├── initiate.ts     – POST /issuer/initiate: VP-Session + Issuance-Session erstellen
+│   │       ├── pid-callback.ts – POST /issuer/link-pid: PID-Claims zur Issuance-Session verknüpfen
+│   │       ├── offer.ts        – POST /issuer/create-offer/:id + GET /issuer/offer/:id
+│   │       ├── token.ts        – POST /issuer/token: pre-auth code → access_token
+│   │       ├── credential.ts   – POST /issuer/credential: proof-of-possession → SD-JWT-VC
+│   │       ├── nonce.ts        – POST /issuer/nonce: frischen c_nonce liefern
+│   │       └── result.ts       – GET /issuer/result/:id: Frontend-Polling für Issuance-Status
 │   ├── lib/
 │   │   ├── session.ts          – In-Memory Session Store (Map<sessionId, SessionState>)
+│   │   ├── issuance-session.ts – In-Memory Issuance Session Store (Map)
+│   │   ├── credential-builder.ts – SD-JWT-VC Credential erstellen (@sd-jwt/core)
 │   │   ├── jar.ts              – JAR (JWT Authorization Request) erstellen & signieren
 │   │   ├── validator.ts        – VP Token validieren (7 Schichten)
 │   │   ├── pid.ts              – PID-Claims aus SD-JWT extrahieren
@@ -114,6 +182,22 @@ page.tsx                – GEÄNDERT: walletVerifiedFields als Top-Level-State,
 
 ```
 DateInput.tsx           – GEÄNDERT: label-Prop von string auf React.ReactNode (für Badge-JSX)
+```
+
+### `web/src/app/ausstellen/` (Credential-Ausstellung)
+
+```
+page.tsx                       – Landing: Credential-Typ auswählen (2 Karten)
+[type]/page.tsx                – Multi-Step-Flow: verify → preview → issue → success
+```
+
+### `web/src/components/ausstellen/`
+
+```
+types.ts                       – CredentialType, Mock-Claim Configs, PidClaims
+PidVerificationStep.tsx        – PID-Verifizierung (QR/Deep Link, pollt /issuer/result/:id)
+CredentialPreview.tsx          – Credential-Vorschau (PID-Felder + Mock-Felder mit Badges)
+IssuanceWalletButton.tsx       – Credential Offer QR/Deep Link (openid-credential-offer://)
 ```
 
 ---
@@ -181,6 +265,175 @@ Nach Abruf wird die Session gelöscht.
 
 ---
 
+## Endpunkte – OpenID4VCI Issuer
+
+### `GET /.well-known/openid-credential-issuer`
+Issuer Metadata gemäß OpenID4VCI. Beschreibt unterstützte Credential-Typen, Formate und Endpunkte.
+
+**Response:**
+```json
+{
+  "credential_issuer": "https://fe-poc-production.up.railway.app",
+  "credential_endpoint": "https://fe-poc-production.up.railway.app/issuer/credential",
+  "nonce_endpoint": "https://fe-poc-production.up.railway.app/issuer/nonce",
+  "credential_configurations_supported": {
+    "wohnungsgeberbestaetigung": {
+      "format": "vc+sd-jwt",
+      "vct": "urn:credential:wohnungsgeberbestaetigung:1",
+      "claims": { "..." }
+    },
+    "genossenschaft-mitglied": {
+      "format": "vc+sd-jwt",
+      "vct": "urn:credential:genossenschaft-mitglied:1",
+      "claims": { "..." }
+    }
+  }
+}
+```
+
+### `GET /.well-known/oauth-authorization-server`
+OAuth 2.0 Authorization Server Metadata. Beschreibt den Token-Endpunkt und unterstützte Grant-Typen.
+
+**Response:**
+```json
+{
+  "issuer": "https://fe-poc-production.up.railway.app",
+  "token_endpoint": "https://fe-poc-production.up.railway.app/issuer/token",
+  "grant_types_supported": ["urn:ietf:params:oauth:grant-type:pre-authorized_code"]
+}
+```
+
+### `POST /issuer/initiate`
+Erstellt eine neue Issuance-Session und eine verknüpfte VP-Session (für PID-Verifizierung).
+
+**Request:**
+```json
+{
+  "credentialType": "wohnungsgeberbestaetigung" | "genossenschaft-mitglied",
+  "returnUrl": "http://localhost:3000"  // optional, nur Mobile
+}
+```
+
+**Response:**
+```json
+{
+  "sessionId": "issuance-session-uuid",
+  "vpSessionId": "vp-session-uuid",
+  "walletUrl": "openid4vp://?client_id=...&request_uri=https://railway-url/request/vp-session-uuid"
+}
+```
+
+### `POST /issuer/link-pid`
+Verknüpft PID-Claims aus einer abgeschlossenen VP-Session mit einer Issuance-Session. (Wird im aktuellen Flow nicht mehr direkt aufgerufen – Callback auto-linked automatisch.)
+
+**Request:**
+```json
+{
+  "issuanceSessionId": "issuance-session-uuid",
+  "vpSessionId": "vp-session-uuid"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "pid_verified",
+  "pidClaims": { "given_name": "...", "family_name": "...", "birthdate": "..." }
+}
+```
+
+### `POST /issuer/create-offer/:sessionId`
+Erstellt ein Credential Offer für die Issuance-Session. Setzt den Status auf `offer_created`.
+
+**Response:**
+```json
+{
+  "walletUrl": "openid-credential-offer://?credential_offer_uri=https://railway-url/issuer/offer/session-uuid"
+}
+```
+
+### `GET /issuer/offer/:sessionId`
+Liefert das Credential Offer JSON (wird von der Wallet abgerufen).
+
+**Response:**
+```json
+{
+  "credential_issuer": "https://fe-poc-production.up.railway.app",
+  "credential_configuration_ids": ["wohnungsgeberbestaetigung"],
+  "grants": {
+    "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+      "pre-authorized_code": "base64url-random-32-bytes"
+    }
+  }
+}
+```
+
+### `POST /issuer/token`
+Token-Endpunkt: tauscht Pre-Authorized Code gegen Access Token + c_nonce.
+
+**Request:** `application/x-www-form-urlencoded`
+```
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code
+&pre-authorized_code=base64url-random-32-bytes
+```
+
+**Response:**
+```json
+{
+  "access_token": "random-access-token",
+  "token_type": "Bearer",
+  "expires_in": 900,
+  "c_nonce": "random-c-nonce",
+  "c_nonce_expires_in": 300
+}
+```
+
+### `POST /issuer/credential`
+Credential-Endpunkt: Nimmt Proof-of-Possession entgegen, erstellt und liefert SD-JWT-VC.
+
+**Request:**
+```json
+{
+  "credential_identifier": "wohnungsgeberbestaetigung",
+  "proof": {
+    "proof_type": "jwt",
+    "jwt": "eyJ..."
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "credential": "eyJ...~disclosure1~disclosure2~",
+  "c_nonce": "new-c-nonce",
+  "c_nonce_expires_in": 300
+}
+```
+
+### `POST /issuer/nonce`
+Liefert einen frischen c_nonce (falls der vorherige abgelaufen ist).
+
+**Response:**
+```json
+{
+  "c_nonce": "fresh-c-nonce",
+  "c_nonce_expires_in": 300
+}
+```
+
+### `GET /issuer/result/:sessionId`
+Frontend pollt diesen Endpunkt für den Issuance-Status.
+
+**Response:**
+- `202` + `{ status: "pending_pid" }` – wartet auf PID-Verifizierung
+- `200` + `{ status: "pid_verified", pidClaims: {...} }` – PID verifiziert, bereit für Vorschau
+- `200` + `{ status: "offer_created" }` – Credential Offer erstellt, wartet auf Wallet
+- `200` + `{ status: "issued" }` – Credential erfolgreich ausgestellt
+- `400` + `{ status: "error", errorMessage: "..." }` – Fehler
+
+---
+
 ## Session State
 
 ```typescript
@@ -200,6 +453,28 @@ Sessions werden im RAM gespeichert (Map). Alle 5 Minuten werden abgelaufene Sess
 
 **Separate `returnUrls`-Map:** `returnUrl` (mobile Rückkehr-URL) wird in einer eigenen `Map<sessionId, string>` gespeichert, die sich automatisch nach 15 Minuten bereinigt. Dadurch überlebt die `returnUrl` die Session-Löschung durch `/result/` – `/done/` kann sie auch dann noch lesen, wenn das Frontend die Session bereits abgeholt hat.
 
+**Verknüpfung VP ↔ Issuance:** `SessionState` hat jetzt ein optionales `issuanceSessionId`-Feld. Wenn eine VP-Session im Rahmen einer Issuance erstellt wurde, wird die `issuanceSessionId` gesetzt. Der Callback erkennt dies und überträgt die PID-Claims automatisch in die Issuance-Session.
+
+### IssuanceSessionState
+
+```typescript
+interface IssuanceSessionState {
+  credentialType: CredentialType         // 'wohnungsgeberbestaetigung' | 'genossenschaft-mitglied'
+  preAuthorizedCode: string              // zufällig, base64url, 32 bytes
+  accessToken?: string                   // gesetzt nach Token-Exchange
+  cNonce?: string                        // gesetzt nach Token-Exchange
+  cNonceExpiresAt?: number               // cNonce Ablaufzeit (Unix ms)
+  pidClaims?: PidClaims                  // gesetzt nach PID-Verifikation
+  holderPublicKeyJwk?: JWK              // gesetzt nach Credential-Ausstellung
+  createdAt: number                      // Unix ms
+  expiresAt: number                      // createdAt + 15 Minuten
+  status: 'pending_pid' | 'pid_verified' | 'offer_created' | 'issued' | 'error'
+  errorMessage?: string
+}
+```
+
+Issuance-Sessions werden ebenfalls im RAM gespeichert (`issuance-session.ts`). Gleicher Cleanup-Mechanismus wie VP-Sessions.
+
 ---
 
 ## PID-Claims → Formular-Mapping
@@ -217,6 +492,38 @@ address.locality         → city               (StepContactInfo)    → Schritt
 **Hinweis:** Das SPRIND-Demo-PID enthält keine Adressdaten. `firstname`, `lastname` und `birthdate` werden immer befüllt.
 
 `walletVerifiedFields` (ein `Set<string>`) wird in `page.tsx` als Top-Level-State gehalten und an alle Steps weitergereicht. So überleben die Badge-Markierungen den Wechsel zwischen Schritten.
+
+---
+
+## Credential-Typen (Issuance)
+
+### Wohnungsgeberbestätigung
+
+**VCT:** `urn:credential:wohnungsgeberbestaetigung:1`
+
+| Feld | Quelle | Wert |
+|------|--------|------|
+| `given_name` | Aus PID | (vom Wallet) |
+| `family_name` | Aus PID | (vom Wallet) |
+| `birthdate` | Aus PID | (vom Wallet) |
+| `street_address` | Mock | `"Musterstraße 42"` |
+| `postal_code` | Mock | `"10115"` |
+| `locality` | Mock | `"Berlin"` |
+| `move_in_date` | Mock | `"2026-04-01"` |
+| `landlord_name` | Mock | `"Immobilien GmbH"` |
+
+### Genossenschafts-Mitgliedsbescheinigung
+
+**VCT:** `urn:credential:genossenschaft-mitglied:1`
+
+| Feld | Quelle | Wert |
+|------|--------|------|
+| `given_name` | Aus PID | (vom Wallet) |
+| `family_name` | Aus PID | (vom Wallet) |
+| `birthdate` | Aus PID | (vom Wallet) |
+| `cooperative_name` | Mock | `"Berliner Wohnungsbaugenossenschaft eG"` |
+| `membership_number` | Mock | `"BWG-2026-04217"` |
+| `member_since` | Mock | `"2026-03-15"` |
 
 ---
 
@@ -394,6 +701,10 @@ Wird in Feld-Labels eingebettet (alle Labels akzeptieren `React.ReactNode`):
 **Problem:** Nach Klick auf "Mit EU Digital Identity Wallet ausfüllen" erschien auf Mobile ein zweiter Button "Wallet öffnen" (der `ready`-Zustand). Zwei Klicks für eine Aktion ist schlechte UX.
 **Fix:** In `handleStart()` öffnet Mobile direkt `window.location.href = data.walletUrl` und ruft sofort `startPolling()` auf. Der `ready`-Zustand wird nicht mehr gesetzt (ist Dead Code).
 
+### 19. Race Condition: VP-Session gelöscht bevor link-pid sie lesen konnte
+**Problem:** Frontend pollt `GET /result/:vpSessionId` → VP-Ergebnis wird zurückgegeben und Session gelöscht. Danach ruft Frontend `POST /issuer/link-pid` mit `vpSessionId` auf → "VP session not found" (Session bereits gelöscht).
+**Fix:** Callback auto-linked PID zur Issuance-Session. VP-Session speichert `issuanceSessionId`. Wenn Callback PID erfolgreich extrahiert und `issuanceSessionId` vorhanden ist, werden die PID-Claims automatisch in die Issuance-Session übertragen. Frontend pollt jetzt `GET /issuer/result/:issuanceSessionId` (wartet auf `pid_verified` Status) statt über den VP-Result-Endpunkt + link-pid Zwei-Schritt-Prozess.
+
 ---
 
 ## Aktueller Stand (März 2026)
@@ -422,10 +733,21 @@ Wird in Feld-Labels eingebettet (alle Labels akzeptieren `React.ReactNode`):
 - [x] Same-Device: Kein redundanter "Wallet öffnen" Button – Wallet öffnet direkt beim ersten Klick ✓
 - [x] `returnUrls`-Map mit eigenem 15-min TTL (Race-Condition-fix: unabhängig von Session-Lifecycle)
 - [x] "Neu starten" Button im Header – setzt Formular, Wallet-Badges und Schritt zurück
+- [x] **OpenID4VCI Credential Issuance** implementiert (Pre-Authorized Code Flow)
+- [x] Zwei Credential-Typen: Wohnungsgeberbestätigung + Genossenschafts-Mitgliedsbescheinigung
+- [x] SD-JWT-VC Credential Builder (`@sd-jwt/core`)
+- [x] Issuer Metadata (`.well-known/openid-credential-issuer` + `oauth-authorization-server`)
+- [x] Token Endpoint (Pre-Authorized Code → access_token + c_nonce)
+- [x] Credential Endpoint (proof-of-possession → SD-JWT-VC)
+- [x] Frontend: `/ausstellen` Landing + `/ausstellen/[type]` Multi-Step-Flow
+- [x] PID-Verifikation → Credential-Vorschau → QR/Deep Link → Issuance
+- [x] Race Condition fix: Callback auto-links PID zu Issuance-Session
 
 ### ⏳ Noch ausstehend / nice-to-have
-- [ ] Adressfelder testen sobald PID mit Adressdaten verfügbar (SPRIND Demo-PID hat aktuell keine)
-- [ ] `ready`-Zustand und `handleOpenWallet()` aus `EudiWalletButton.tsx` entfernen (Dead Code)
+- [ ] SPRIND Wallet Issuance-Support testen sobald nächstes Update veröffentlicht (v0.2.x)
+- [ ] Eudiplo Referenz-Issuer als Format-Vergleich recherchieren
+- [ ] Adressfelder testen sobald PID mit Adressdaten verfügbar
+- [ ] `ready`-Zustand aus `EudiWalletButton.tsx` entfernen (Dead Code)
 - [ ] Für Prod: Redis statt In-Memory Session Store
 
 ---
@@ -443,11 +765,15 @@ npm run dev           # startet auf localhost:3001
 cd web
 npm run dev           # startet auf localhost:3000
 
-# Browser:
+# Browser – Bewerbungsformular:
 # http://localhost:3000/bewerbung
 # → Schritt "Persönliche Angaben"
 # → EUDIW Logo + Button "Mit EU Digital Identity Wallet ausfüllen" → QR-Code erscheint
 # → Mit SPRIND EUDI Wallet App scannen → Daten freigeben → Formular wird befüllt
+
+# Browser – Credential-Ausstellung:
+# http://localhost:3000/ausstellen
+# → Credential-Typ auswählen → PID verifizieren → Vorschau → Ausstellung
 ```
 
 **Service direkt testen:**
@@ -460,6 +786,10 @@ curl -X POST https://fe-poc-production.up.railway.app/initiate
 
 # JAR abrufen (sessionId aus vorherigem Call)
 curl https://fe-poc-production.up.railway.app/request/<sessionId>
+
+# Issuer Metadata testen:
+curl https://fe-poc-production.up.railway.app/.well-known/openid-credential-issuer
+curl https://fe-poc-production.up.railway.app/.well-known/oauth-authorization-server
 ```
 
 ---
