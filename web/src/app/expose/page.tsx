@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { getProperty, getTranslations, type PropertyData } from '@/lib/api/queries';
 
-const DEFAULT_PROPERTY_ID = process.env.NEXT_PUBLIC_PROPERTY_ID || '300375578';
+const DEFAULT_PROPERTY_ID = process.env.NEXT_PUBLIC_PROPERTY_ID || '6850da6f-a361-40ec-bea2-3cbf2f8fe8b3';
 
 type Property = PropertyData['property'];
 

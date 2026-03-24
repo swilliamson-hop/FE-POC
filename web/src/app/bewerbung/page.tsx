@@ -18,7 +18,7 @@ const TOTAL_STEPS = 5;
 function BewerbungContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const propertyId = searchParams.get('propertyId') || process.env.NEXT_PUBLIC_PROPERTY_ID || '300375578';
+  const propertyId = searchParams.get('propertyId') || process.env.NEXT_PUBLIC_PROPERTY_ID || '6850da6f-a361-40ec-bea2-3cbf2f8fe8b3';
 
   const { formState, updateField, updateFields, resetForm, isLoaded } = useApplicationForm(propertyId);
   const [currentStep, setCurrentStep] = useState(1);
