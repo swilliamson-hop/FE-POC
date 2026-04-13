@@ -10,7 +10,7 @@ export function handleIssuerMetadata(c: Context): Response {
     nonce_endpoint: `${SERVICE_URL}/issuer/nonce`,
     credential_configurations_supported: {
       wohnungsgeberbestaetigung: {
-        format: 'vc+sd-jwt',
+        format: 'dc+sd-jwt',
         vct: 'urn:credential:wohnungsgeberbestaetigung:1',
         cryptographic_binding_methods_supported: ['jwk'],
         credential_signing_alg_values_supported: ['ES256'],
@@ -36,7 +36,7 @@ export function handleIssuerMetadata(c: Context): Response {
         },
       },
       'genossenschaft-mitglied': {
-        format: 'vc+sd-jwt',
+        format: 'dc+sd-jwt',
         vct: 'urn:credential:genossenschaft-mitglied:1',
         cryptographic_binding_methods_supported: ['jwk'],
         credential_signing_alg_values_supported: ['ES256'],
