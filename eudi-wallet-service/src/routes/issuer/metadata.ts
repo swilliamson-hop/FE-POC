@@ -7,9 +7,6 @@ export function handleIssuerMetadata(c: Context): Response {
   return c.json({
     credential_issuer: SERVICE_URL,
     credential_endpoint: `${SERVICE_URL}/issuer/credential`,
-    token_endpoint: `${SERVICE_URL}/issuer/token`,
-    authorization_servers: [SERVICE_URL],
-    grant_types_supported: ['urn:ietf:params:oauth:grant-type:pre-authorized_code'],
     batch_credential_issuance: { batch_size: 1 },
     display: [
       {
