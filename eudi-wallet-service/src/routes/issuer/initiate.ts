@@ -45,8 +45,8 @@ export async function handleIssuanceInitiate(c: Context): Promise<Response> {
   // Create issuance session first so we can link it to the VP session
   const issuanceSessionId = randomUUID()
   const preAuthorizedCode = randomBytes(32).toString('base64url')
-  // Random 4-digit PIN as tx_code
-  const txCode = Math.floor(1000 + Math.random() * 9000).toString()
+  // Random 6-digit PIN as tx_code (SPRIND/IDGo wallet rejects length=4 client-side)
+  const txCode = Math.floor(100000 + Math.random() * 900000).toString()
 
   createIssuanceSession(issuanceSessionId, {
     credentialType,
