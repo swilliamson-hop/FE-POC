@@ -7,10 +7,21 @@ export function handleIssuerMetadata(c: Context): Response {
   return c.json({
     credential_issuer: SERVICE_URL,
     credential_endpoint: `${SERVICE_URL}/issuer/credential`,
-    nonce_endpoint: `${SERVICE_URL}/issuer/nonce`,
+    batch_credential_issuance: { batch_size: 1 },
+    display: [
+      {
+        name: 'Immomio EUDI Demo',
+        locale: 'de-DE',
+      },
+      {
+        name: 'Immomio EUDI Demo',
+        locale: 'en-US',
+      },
+    ],
     credential_configurations_supported: {
       wohnungsgeberbestaetigung: {
         format: 'dc+sd-jwt',
+        scope: 'wohnungsgeberbestaetigung',
         vct: 'urn:credential:wohnungsgeberbestaetigung:1',
         cryptographic_binding_methods_supported: ['jwk'],
         credential_signing_alg_values_supported: ['ES256'],
@@ -37,6 +48,7 @@ export function handleIssuerMetadata(c: Context): Response {
       },
       'genossenschaft-mitglied': {
         format: 'dc+sd-jwt',
+        scope: 'genossenschaft-mitglied',
         vct: 'urn:credential:genossenschaft-mitglied:1',
         cryptographic_binding_methods_supported: ['jwk'],
         credential_signing_alg_values_supported: ['ES256'],
