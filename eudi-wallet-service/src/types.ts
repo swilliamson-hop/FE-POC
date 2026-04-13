@@ -68,6 +68,7 @@ export type CredentialType = 'wohnungsgeberbestaetigung' | 'genossenschaft-mitgl
 export interface IssuanceSessionState {
   credentialType: CredentialType
   preAuthorizedCode: string
+  txCode: string                   // 4-digit PIN for wallet tx_code step
   accessToken?: string
   cNonce?: string
   cNonceExpiresAt?: number
@@ -85,6 +86,11 @@ export interface CredentialOfferObject {
   grants: {
     'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
       'pre-authorized_code': string
+      tx_code?: {
+        input_mode: 'numeric' | 'text'
+        length: number
+        description?: string
+      }
     }
   }
 }

@@ -7,6 +7,7 @@ import { findSessionByPreAuthCode, updateIssuanceSession } from '../../lib/issua
 export async function handleToken(c: Context): Promise<Response> {
   let grantType: string | undefined
   let preAuthorizedCode: string | undefined
+  let txCode: string | undefined
 
   const contentType = c.req.header('content-type') ?? ''
 
@@ -14,13 +15,15 @@ export async function handleToken(c: Context): Promise<Response> {
     const formData = await c.req.formData()
     grantType = formData.get('grant_type') as string
     preAuthorizedCode = formData.get('pre-authorized_code') as string
+    txCode = formData.get('tx_code') as string | undefined
   } else {
     const body = await c.req.json<Record<string, string>>()
     grantType = body.grant_type
     preAuthorizedCode = body['pre-authorized_code']
+    txCode = body.tx_code
   }
 
-  console.log(`[Issuer/Token] grant_type=${grantType}`)
+  console.log(`[Issuer/Token] grant_type=${grantType} tx_code=${txCode ? '***' : 'missing'}`)
 
   if (grantType !== 'urn:ietf:params:oauth:grant-type:pre-authorized_code') {
     return c.json({ error: 'unsupported_grant_type' }, 400)
@@ -35,7 +38,12 @@ export async function handleToken(c: Context): Promise<Response> {
     return c.json({ error: 'invalid_grant', error_description: 'Invalid pre-authorized code' }, 400)
   }
 
-  const [sessionId] = found
+  const [sessionId, session] = found
+
+  if (!txCode || txCode !== session.txCode) {
+    console.log(`[Issuer/Token] tx_code mismatch: got=${txCode} expected=${session.txCode}`)
+    return c.json({ error: 'invalid_grant', error_description: 'Invalid tx_code' }, 400)
+  }
 
   const accessToken = randomBytes(32).toString('base64url')
   const cNonce = randomBytes(16).toString('base64url')

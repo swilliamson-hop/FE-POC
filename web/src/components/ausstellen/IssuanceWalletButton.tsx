@@ -10,7 +10,7 @@ const POLL_TIMEOUT_MS = 3 * 60 * 1000
 type FlowState =
   | { status: 'idle' }
   | { status: 'creating' }
-  | { status: 'polling'; walletUrl: string; isMobile: boolean }
+  | { status: 'polling'; walletUrl: string; isMobile: boolean; txCode: string }
   | { status: 'success' }
   | { status: 'error'; message: string }
 
@@ -38,8 +38,8 @@ export function IssuanceWalletButton({ issuanceSessionId, onIssued }: Props) {
 
   useEffect(() => () => stopPolling(), [stopPolling])
 
-  function startPolling(walletUrl: string, isMobile: boolean) {
-    setFlow({ status: 'polling', walletUrl, isMobile })
+  function startPolling(walletUrl: string, isMobile: boolean, txCode: string) {
+    setFlow({ status: 'polling', walletUrl, isMobile, txCode })
 
     pollRef.current = setInterval(async () => {
       try {
@@ -79,7 +79,7 @@ export function IssuanceWalletButton({ issuanceSessionId, onIssued }: Props) {
       if (mobile) {
         window.location.href = data.walletUrl
       }
-      startPolling(data.walletUrl, mobile)
+      startPolling(data.walletUrl, mobile, data.txCode)
     } catch {
       setFlow({ status: 'error', message: 'Credential-Offer konnte nicht erstellt werden.' })
     }
@@ -138,6 +138,10 @@ export function IssuanceWalletButton({ issuanceSessionId, onIssued }: Props) {
     return (
       <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4 text-sm">
         <p className="mb-3 font-medium text-blue-900">Credential in Wallet empfangen</p>
+        <div className="mb-3 rounded-lg bg-white p-3 text-center">
+          <p className="text-xs text-gray-600">PIN für Wallet:</p>
+          <p className="text-3xl font-mono font-bold tracking-widest text-blue-700">{flow.txCode}</p>
+        </div>
         <div className="flex items-center gap-2 text-blue-700">
           <span className="animate-spin inline-block">&#x27F3;</span>
           Warte auf Empfang in der Wallet...
@@ -159,6 +163,10 @@ export function IssuanceWalletButton({ issuanceSessionId, onIssued }: Props) {
         <div className="rounded-lg bg-white p-3 shadow-sm">
           <QRCodeSVG value={flow.walletUrl} size={200} />
         </div>
+      </div>
+      <div className="mt-3 rounded-lg bg-white p-3 text-center">
+        <p className="text-xs text-gray-600">PIN für Wallet:</p>
+        <p className="text-3xl font-mono font-bold tracking-widest text-blue-700">{flow.txCode}</p>
       </div>
       <div className="mt-3 flex items-center justify-center gap-2 text-sm text-blue-700">
         <span className="animate-spin inline-block">&#x27F3;</span>

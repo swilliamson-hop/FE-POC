@@ -20,9 +20,9 @@ export async function handleCreateOffer(c: Context): Promise<Response> {
   const credentialOfferUri = `${SERVICE_URL}/issuer/offer/${sessionId}`
   const walletUrl = `openid-credential-offer://?credential_offer_uri=${encodeURIComponent(credentialOfferUri)}`
 
-  console.log(`[Issuer] Offer created for session ${sessionId}: ${walletUrl}`)
+  console.log(`[Issuer] Offer created for session ${sessionId}: ${walletUrl} (txCode=${session.txCode})`)
 
-  return c.json({ sessionId, credentialOfferUri, walletUrl })
+  return c.json({ sessionId, credentialOfferUri, walletUrl, txCode: session.txCode })
 }
 
 // GET /issuer/offer/:sessionId
@@ -42,6 +42,11 @@ export function handleGetOffer(c: Context): Response {
     grants: {
       'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
         'pre-authorized_code': session.preAuthorizedCode,
+        tx_code: {
+          input_mode: 'numeric',
+          length: 4,
+          description: 'PIN aus der Immomio-App eingeben',
+        },
       },
     },
   }

@@ -45,10 +45,13 @@ export async function handleIssuanceInitiate(c: Context): Promise<Response> {
   // Create issuance session first so we can link it to the VP session
   const issuanceSessionId = randomUUID()
   const preAuthorizedCode = randomBytes(32).toString('base64url')
+  // Random 4-digit PIN as tx_code
+  const txCode = Math.floor(1000 + Math.random() * 9000).toString()
 
   createIssuanceSession(issuanceSessionId, {
     credentialType,
     preAuthorizedCode,
+    txCode,
     createdAt: now,
     expiresAt: now + 15 * 60 * 1000,
     status: 'pending_pid',
