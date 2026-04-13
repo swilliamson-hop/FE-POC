@@ -32,6 +32,14 @@ app.use(
   })
 )
 
+// Debug: log every incoming request (helps diagnose wallet behaviour)
+app.use('*', async (c, next) => {
+  const ua = c.req.header('user-agent') ?? '-'
+  console.log(`[HTTP] ${c.req.method} ${c.req.path} ua=${ua.slice(0, 80)}`)
+  await next()
+  console.log(`[HTTP] ${c.req.method} ${c.req.path} -> ${c.res.status}`)
+})
+
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
 
