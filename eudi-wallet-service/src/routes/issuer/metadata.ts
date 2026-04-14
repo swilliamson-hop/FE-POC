@@ -7,7 +7,9 @@ export function handleIssuerMetadata(c: Context): Response {
   c.header('Cache-Control', 'no-store')
   return c.json({
     credential_issuer: SERVICE_URL,
+    authorization_servers: [SERVICE_URL],
     credential_endpoint: `${SERVICE_URL}/issuer/credential`,
+    nonce_endpoint: `${SERVICE_URL}/issuer/nonce`,
     batch_credential_issuance: { batch_size: 1 },
     display: [
       {
