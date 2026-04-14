@@ -107,6 +107,12 @@ app.get('/done/:sessionId', (c) => {
 </html>`)
 })
 
+// Catch-all: log any unmatched request (helps find wallet URLs we're missing)
+app.all('*', (c) => {
+  console.log(`[404] ${c.req.method} ${c.req.path} ua=${(c.req.header('user-agent') ?? '-').slice(0, 80)}`)
+  return c.json({ error: 'Not found' }, 404)
+})
+
 const port = Number(process.env.PORT ?? 3001)
 
 // Load trust lists on startup

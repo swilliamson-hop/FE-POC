@@ -44,7 +44,7 @@ export function handleGetOffer(c: Context): Response {
         'pre-authorized_code': session.preAuthorizedCode,
         tx_code: {
           input_mode: 'numeric',
-          length: 6,
+          length: 4,
           description: 'PIN aus der Immomio-App eingeben',
         },
       },
