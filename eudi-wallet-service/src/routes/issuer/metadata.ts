@@ -4,6 +4,7 @@ const SERVICE_URL = process.env.SERVICE_URL ?? `http://localhost:${process.env.P
 
 // GET /.well-known/openid-credential-issuer
 export function handleIssuerMetadata(c: Context): Response {
+  c.header('Cache-Control', 'no-store')
   return c.json({
     credential_issuer: SERVICE_URL,
     credential_endpoint: `${SERVICE_URL}/issuer/credential`,
@@ -75,6 +76,7 @@ export function handleIssuerMetadata(c: Context): Response {
 
 // GET /.well-known/oauth-authorization-server
 export function handleAuthServerMetadata(c: Context): Response {
+  c.header('Cache-Control', 'no-store')
   return c.json({
     issuer: SERVICE_URL,
     token_endpoint: `${SERVICE_URL}/issuer/token`,
