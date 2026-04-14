@@ -15,15 +15,16 @@ export async function handleToken(c: Context): Promise<Response> {
     const formData = await c.req.formData()
     grantType = formData.get('grant_type') as string
     preAuthorizedCode = formData.get('pre-authorized_code') as string
-    txCode = formData.get('tx_code') as string | undefined
+    // Accept both tx_code (new draft) and user_pin (old draft)
+    txCode = (formData.get('tx_code') ?? formData.get('user_pin')) as string | undefined
   } else {
     const body = await c.req.json<Record<string, string>>()
     grantType = body.grant_type
     preAuthorizedCode = body['pre-authorized_code']
-    txCode = body.tx_code
+    txCode = body.tx_code ?? body.user_pin
   }
 
-  console.log(`[Issuer/Token] grant_type=${grantType} tx_code=${txCode ? '***' : 'missing'}`)
+  console.log(`[Issuer/Token] grant_type=${grantType} pin=${txCode ? '***' : 'missing'}`)
 
   if (grantType !== 'urn:ietf:params:oauth:grant-type:pre-authorized_code') {
     return c.json({ error: 'unsupported_grant_type' }, 400)

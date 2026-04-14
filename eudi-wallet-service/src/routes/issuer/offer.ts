@@ -36,7 +36,7 @@ export function handleGetOffer(c: Context): Response {
     return c.json({ error: `Invalid session status: ${session.status}` }, 400)
   }
 
-  const offer: CredentialOfferObject = {
+  const offer = {
     credential_issuer: SERVICE_URL,
     credential_configuration_ids: [session.credentialType],
     grants: {
@@ -47,6 +47,8 @@ export function handleGetOffer(c: Context): Response {
           length: 4,
           description: 'PIN aus der Immomio-App eingeben',
         },
+        // BMI EAA Developer Guide uses this older format – keep both for compat
+        user_pin_required: true,
       },
     },
   }
