@@ -89,7 +89,7 @@ export async function createCredential(
     saltGenerator,
   })
 
-  const header = { typ: 'vc+sd-jwt', x5c }
+  const header = { typ: 'dc+sd-jwt', x5c }
 
   if (credentialType === 'wohnungsgeberbestaetigung') {
     const payload = buildWohnungsgeberPayload(pidClaims, holderPublicKeyJwk)
