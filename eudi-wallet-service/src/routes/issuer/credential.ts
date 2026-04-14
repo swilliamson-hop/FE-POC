@@ -75,7 +75,7 @@ export async function handleCredential(c: Context): Promise<Response> {
 
     return c.json({
       credential,
-      format: 'dc+sd-jwt',
+      format: 'vc+sd-jwt',
       c_nonce: newCNonce,
       c_nonce_expires_in: 300,
     })

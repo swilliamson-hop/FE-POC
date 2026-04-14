@@ -21,7 +21,7 @@ export function handleIssuerMetadata(c: Context): Response {
     ],
     credential_configurations_supported: {
       wohnungsgeberbestaetigung: {
-        format: 'dc+sd-jwt',
+        format: 'vc+sd-jwt',
         vct: 'urn:credential:wohnungsgeberbestaetigung:1',
         cryptographic_binding_methods_supported: ['jwk'],
         credential_signing_alg_values_supported: ['ES256'],
@@ -47,7 +47,7 @@ export function handleIssuerMetadata(c: Context): Response {
         },
       },
       'genossenschaft-mitglied': {
-        format: 'dc+sd-jwt',
+        format: 'vc+sd-jwt',
         vct: 'urn:credential:genossenschaft-mitglied:1',
         cryptographic_binding_methods_supported: ['jwk'],
         credential_signing_alg_values_supported: ['ES256'],
