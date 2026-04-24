@@ -42,12 +42,7 @@ export function handleGetOffer(c: Context): Response {
     grants: {
       'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
         'pre-authorized_code': session.preAuthorizedCode,
-        tx_code: {
-          input_mode: 'numeric',
-          length: 4,
-          description: 'PIN aus der Immomio-App eingeben',
-        },
-        // BMI EAA Developer Guide uses this older format – keep both for compat
+        // BMI EAA Developer Guide uses user_pin_required only (no tx_code object)
         user_pin_required: true,
       },
     },

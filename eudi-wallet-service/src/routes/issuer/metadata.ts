@@ -3,13 +3,14 @@ import type { Context } from 'hono'
 const SERVICE_URL = process.env.SERVICE_URL ?? `http://localhost:${process.env.PORT ?? 3001}`
 
 // GET /.well-known/openid-credential-issuer
-// Minimal metadata following BMI EAA Developer Guide template
+// Follows BMI EAA Developer Guide template exactly:
+// https://bmi.usercontent.opencode.de/eudi-wallet/developer-guide/eaa/EAA_Issuance/
 export function handleIssuerMetadata(c: Context): Response {
   c.header('Cache-Control', 'no-store')
   return c.json({
     credential_issuer: SERVICE_URL,
     credential_endpoint: `${SERVICE_URL}/issuer/credential`,
-    nonce_endpoint: `${SERVICE_URL}/issuer/nonce`,
+    token_endpoint: `${SERVICE_URL}/issuer/token`,
     credential_configurations_supported: {
       wohnungsgeberbestaetigung: {
         format: 'dc+sd-jwt',
@@ -17,6 +18,9 @@ export function handleIssuerMetadata(c: Context): Response {
         credential_signing_alg_values_supported: ['ES256'],
       },
     },
+    grant_types_supported: [
+      'urn:ietf:params:oauth:grant-type:pre-authorized_code',
+    ],
   })
 }
 
