@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
+import type { Context } from 'hono'
 import { cors } from 'hono/cors'
 import { serve } from '@hono/node-server'
+import { randomUUID } from 'node:crypto'
 import { handleInitiate } from './routes/initiate.js'
 import { handleRequest } from './routes/request.js'
 import { handleCallback } from './routes/callback.js'
@@ -32,13 +34,74 @@ app.use(
   })
 )
 
-// Debug: log every incoming request (helps diagnose wallet behaviour)
+// === DEBUG: white-screen-on-first-scan investigation (added 2026-04-28) ===
+// To roll back: remove this section and restore the simple logger above
+// To disable individual delays: unset the ARTIFICIAL_DELAY_* env vars
+
+// List of headers worth logging from wallet requests (empty values are skipped)
+const RELEVANT_HEADERS = [
+  'accept',
+  'accept-encoding',
+  'accept-language',
+  'cache-control',
+  'pragma',
+  'if-none-match',
+  'if-modified-since',
+  'range',
+  'content-type',
+  'content-length',
+  'origin',
+  'referer',
+] as const
+
+function formatHeaders(c: Context): string {
+  const parts: string[] = []
+  for (const name of RELEVANT_HEADERS) {
+    const value = c.req.header(name)
+    if (value) parts.push(`${name}=${value}`)
+  }
+  return parts.length > 0 ? ` ${parts.join(' ')}` : ''
+}
+
+// Per-request ID + millisecond timing + full relevant headers
+// Output format makes it easy to grep and to pair [REQ <id>] with [RES <id>]
 app.use('*', async (c, next) => {
-  const ua = c.req.header('user-agent') ?? '-'
-  console.log(`[HTTP] ${c.req.method} ${c.req.path} ua=${ua.slice(0, 80)}`)
+  const reqId = randomUUID().slice(0, 8)
+  const start = Date.now()
+  const ts = new Date(start).toISOString().slice(11, 23) // HH:mm:ss.SSS
+  const ua = (c.req.header('user-agent') ?? '-').slice(0, 60)
+  const headers = formatHeaders(c)
+
+  console.log(`[REQ ${reqId}] ${ts} ${c.req.method} ${c.req.path} ua=${ua}${headers}`)
+
   await next()
-  console.log(`[HTTP] ${c.req.method} ${c.req.path} -> ${c.res.status}`)
+
+  const duration = Date.now() - start
+  console.log(`[RES ${reqId}] +${duration}ms ${c.req.method} ${c.req.path} -> ${c.res.status}`)
 })
+
+// Artificial delay middleware – probes wallet race conditions
+// Set ARTIFICIAL_DELAY_OFFER_MS or ARTIFICIAL_DELAY_METADATA_MS to test
+const offerDelayMs = Number(process.env.ARTIFICIAL_DELAY_OFFER_MS ?? 0)
+const metadataDelayMs = Number(process.env.ARTIFICIAL_DELAY_METADATA_MS ?? 0)
+
+if (offerDelayMs > 0 || metadataDelayMs > 0) {
+  console.log(`[DELAY-CONFIG] offer=${offerDelayMs}ms metadata=${metadataDelayMs}ms`)
+}
+
+app.use('*', async (c, next) => {
+  let delay = 0
+  if (offerDelayMs > 0 && c.req.path.startsWith('/issuer/offer/')) delay = offerDelayMs
+  else if (metadataDelayMs > 0 && c.req.path.startsWith('/.well-known/')) delay = metadataDelayMs
+
+  if (delay > 0) {
+    console.log(`[DELAY] ${c.req.path} sleeping ${delay}ms`)
+    await new Promise((resolve) => setTimeout(resolve, delay))
+  }
+  await next()
+})
+
+// === END DEBUG section ===
 
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
@@ -107,9 +170,9 @@ app.get('/done/:sessionId', (c) => {
 </html>`)
 })
 
-// Catch-all: log any unmatched request (helps find wallet URLs we're missing)
+// Catch-all: any unmatched request (the REQ/RES middleware above already logged it)
 app.all('*', (c) => {
-  console.log(`[404] ${c.req.method} ${c.req.path} ua=${(c.req.header('user-agent') ?? '-').slice(0, 80)}`)
+  console.log(`[404-MISS] ${c.req.method} ${c.req.path}`)
   return c.json({ error: 'Not found' }, 404)
 })
 
