@@ -63,7 +63,13 @@ export function handleAuthServerMetadata(c: Context): Response {
   c.header('Cache-Control', 'no-store')
   return c.json({
     issuer: SERVICE_URL,
+    // SPRIND wallet validates authorization_endpoint per RFC 8414 even for
+    // pre-authorized code flow (where it is never actually called). Without
+    // this field the wallet shows "ValidationError: Invalid authorization endpoint"
+    // when the user taps "Weiter zur Eingabe" on the consent screen.
+    authorization_endpoint: `${SERVICE_URL}/issuer/authorize`,
     token_endpoint: `${SERVICE_URL}/issuer/token`,
+    response_types_supported: ['code'],
     grant_types_supported: [
       'urn:ietf:params:oauth:grant-type:pre-authorized_code',
     ],
