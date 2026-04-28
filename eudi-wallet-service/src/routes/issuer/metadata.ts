@@ -18,6 +18,15 @@ export function handleIssuerMetadata(c: Context): Response {
         format: 'dc+sd-jwt',
         vct: 'urn:credential:wohnungsgeberbestaetigung:1',
         credential_signing_alg_values_supported: ['ES256'],
+        // Tells the wallet which algorithms to use when signing the proof JWT
+        // for holder binding. Without this, the wallet logs:
+        // "No valid signing algorithms found in credential metadata: []"
+        // and shows misleading "invalid transaction code" to the user.
+        proof_types_supported: {
+          jwt: {
+            proof_signing_alg_values_supported: ['ES256'],
+          },
+        },
         // Mirror SPRIND community forum post structure (confirmed working
         // for credential receipt): display is inside credential_metadata wrapper,
         // NOT directly on the credential configuration. This is non-standard
