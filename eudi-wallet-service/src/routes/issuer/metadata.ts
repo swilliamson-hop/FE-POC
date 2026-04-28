@@ -16,22 +16,28 @@ export function handleIssuerMetadata(c: Context): Response {
         format: 'dc+sd-jwt',
         vct: 'urn:credential:wohnungsgeberbestaetigung:1',
         credential_signing_alg_values_supported: ['ES256'],
-        display: [
-          {
-            name: 'Wohnungsgeberbestätigung',
-            locale: 'de-DE',
-            description: 'Bestätigung des Vermieters über den Einzug in eine Wohnung',
-            background_color: '#0066CC',
-            text_color: '#FFFFFF',
-          },
-          {
-            name: 'Landlord Confirmation',
-            locale: 'en-US',
-            description: 'Landlord confirmation of move-in to a residence',
-            background_color: '#0066CC',
-            text_color: '#FFFFFF',
-          },
-        ],
+        // Mirror SPRIND community forum post structure (confirmed working
+        // for credential receipt): display is inside credential_metadata wrapper,
+        // NOT directly on the credential configuration. This is non-standard
+        // per OpenID4VCI spec but matches what the SPRIND wallet expects.
+        credential_metadata: {
+          display: [
+            {
+              name: 'Wohnungsgeberbestätigung',
+              locale: 'de-DE',
+              description: 'Bestätigung des Vermieters über den Einzug in eine Wohnung',
+              background_color: '#0066CC',
+              text_color: '#FFFFFF',
+            },
+            {
+              name: 'Landlord Confirmation',
+              locale: 'en-US',
+              description: 'Landlord confirmation of move-in to a residence',
+              background_color: '#0066CC',
+              text_color: '#FFFFFF',
+            },
+          ],
+        },
       },
     },
     grant_types_supported: [
