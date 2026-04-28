@@ -53,11 +53,10 @@ export function buildDcqlQuery(): DcqlQuery {
           { id: 'pid_given_name', path: ['given_name'] },
           { id: 'pid_family_name', path: ['family_name'] },
           { id: 'pid_birthdate', path: ['birthdate'] },
-          // Wallet bug workaround: requesting nested paths like ['address', 'locality']
-          // causes the SPRIND wallet to silently drop address disclosures even though
-          // the data exists in the PID. Requesting the top-level address object instead
-          // makes the wallet disclose the whole address object as a single SD claim.
-          { id: 'pid_address', path: ['address'] },
+          { id: 'pid_address_street', path: ['address', 'street_address'] },
+          { id: 'pid_address_postal_code', path: ['address', 'postal_code'] },
+          { id: 'pid_address_locality', path: ['address', 'locality'] },
+          { id: 'pid_address_country', path: ['address', 'country'] },
         ],
       },
     ],
