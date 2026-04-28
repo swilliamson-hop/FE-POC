@@ -42,8 +42,15 @@ export function handleGetOffer(c: Context): Response {
     grants: {
       'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
         'pre-authorized_code': session.preAuthorizedCode,
-        // BMI EAA Developer Guide uses user_pin_required only (no tx_code object)
-        user_pin_required: true,
+        // SPRIND wallet (build 53+) uses the new OID4VCI draft tx_code object
+        // to detect that a PIN is required. Without this object, the wallet
+        // calls /token without any PIN and gets 'Invalid tx_code' rejection.
+        // user_pin_required (old draft) is ignored by this wallet version.
+        tx_code: {
+          input_mode: 'numeric',
+          length: 4,
+          description: 'PIN aus der Immomio-App eingeben',
+        },
       },
     },
   }
