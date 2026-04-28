@@ -11,6 +11,8 @@ export function handleIssuerMetadata(c: Context): Response {
     credential_issuer: SERVICE_URL,
     credential_endpoint: `${SERVICE_URL}/issuer/credential`,
     token_endpoint: `${SERVICE_URL}/issuer/token`,
+    // HAIP-required: wallet fetches a fresh c_nonce here before building the proof JWT
+    nonce_endpoint: `${SERVICE_URL}/issuer/nonce`,
     credential_configurations_supported: {
       wohnungsgeberbestaetigung: {
         format: 'dc+sd-jwt',
