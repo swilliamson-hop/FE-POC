@@ -16,10 +16,36 @@ export function handleIssuerMetadata(c: Context): Response {
         format: 'dc+sd-jwt',
         vct: 'urn:credential:wohnungsgeberbestaetigung:1',
         credential_signing_alg_values_supported: ['ES256'],
+        display: [
+          {
+            name: 'Wohnungsgeberbestätigung',
+            locale: 'de-DE',
+            description: 'Bestätigung des Vermieters über den Einzug in eine Wohnung',
+            background_color: '#0066CC',
+            text_color: '#FFFFFF',
+          },
+          {
+            name: 'Landlord Confirmation',
+            locale: 'en-US',
+            description: 'Landlord confirmation of move-in to a residence',
+            background_color: '#0066CC',
+            text_color: '#FFFFFF',
+          },
+        ],
       },
     },
     grant_types_supported: [
       'urn:ietf:params:oauth:grant-type:pre-authorized_code',
+    ],
+    display: [
+      {
+        name: 'Immomio',
+        locale: 'de-DE',
+      },
+      {
+        name: 'Immomio',
+        locale: 'en-US',
+      },
     ],
   })
 }
