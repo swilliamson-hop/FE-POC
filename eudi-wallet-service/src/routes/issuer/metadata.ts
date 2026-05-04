@@ -50,6 +50,34 @@ export function handleIssuerMetadata(c: Context): Response {
           ],
         },
       },
+      'genossenschaft-mitglied': {
+        format: 'dc+sd-jwt',
+        vct: 'urn:credential:genossenschaft-mitglied:1',
+        credential_signing_alg_values_supported: ['ES256'],
+        proof_types_supported: {
+          jwt: {
+            proof_signing_alg_values_supported: ['ES256'],
+          },
+        },
+        credential_metadata: {
+          display: [
+            {
+              name: 'Genossenschafts-Mitgliedsbescheinigung',
+              locale: 'de-DE',
+              description: 'Bescheinigung über die Mitgliedschaft in einer Wohnungsbaugenossenschaft',
+              background_color: '#1A7F5A',
+              text_color: '#FFFFFF',
+            },
+            {
+              name: 'Cooperative Membership Certificate',
+              locale: 'en-US',
+              description: 'Certificate of membership in a housing cooperative',
+              background_color: '#1A7F5A',
+              text_color: '#FFFFFF',
+            },
+          ],
+        },
+      },
     },
     grant_types_supported: [
       'urn:ietf:params:oauth:grant-type:pre-authorized_code',
