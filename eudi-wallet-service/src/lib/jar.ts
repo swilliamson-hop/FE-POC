@@ -97,6 +97,14 @@ export async function createSignedJar(params: JarParams): Promise<string> {
     state: sessionId,
     response_uri: responseUri,
     dcql_query: buildDcqlQuery(),
+    // Identifies the Relying Party in the wallet's consent screen.
+    // Required by EUDI-ARF Section 3.2 (PID Presentation profile) so the user
+    // sees "Immomio is requesting your data" instead of just a hash/URL.
+    // Verified as a recommended improvement by ERICA on 2026-05-05.
+    verifier_info: {
+      name: 'Immomio',
+      logo_uri: 'https://www.mieter.immomio.com/favicon.ico',
+    },
     client_metadata: {
       jwks: {
         keys: [ephemeralPublicKeyJwk],
