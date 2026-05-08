@@ -81,7 +81,10 @@ export async function createSignedJar(params: JarParams): Promise<string> {
   const { sessionId, nonce, ephemeralPublicKeyJwk } = params
   const privateKey = await getPrivateKey()
   const certChainPem = process.env.CERT_CHAIN!.replace(/\\n/g, '\n')
-  const x5c = parseCertChain(certChainPem)
+  // Only the leaf (access) cert goes into x5c. Including the Registrar root
+  // causes the wallet to display "German Registrar" on the consent screen
+  // (per SPRIND, 2026-05-08).
+  const x5c = [parseCertChain(certChainPem)[0]]
   const clientId = computeClientId()
 
   const now = Math.floor(Date.now() / 1000)
