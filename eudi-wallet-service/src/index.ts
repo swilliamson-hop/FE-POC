@@ -3,6 +3,9 @@ import type { Context } from 'hono'
 import { cors } from 'hono/cors'
 import { serve } from '@hono/node-server'
 import { randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { handleInitiate } from './routes/initiate.js'
 import { handleRequest } from './routes/request.js'
 import { handleCallback } from './routes/callback.js'
@@ -105,6 +108,18 @@ app.use('*', async (c, next) => {
 
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
+
+// Immomio logo – referenced by verifier_info.logo_uri so wallets can render it
+// on the consent screen. Loaded once at startup.
+const logoBuffer = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'Immomio_Logo-01.png')
+)
+app.get('/logo.png', (c) =>
+  c.body(logoBuffer, 200, {
+    'Content-Type': 'image/png',
+    'Cache-Control': 'public, max-age=86400',
+  })
+)
 
 // EUDI Wallet endpoints
 app.post('/initiate', handleInitiate)

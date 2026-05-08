@@ -106,7 +106,7 @@ export async function createSignedJar(params: JarParams): Promise<string> {
     // Verified as a recommended improvement by ERICA on 2026-05-05.
     verifier_info: {
       name: 'Immomio',
-      logo_uri: 'https://www.mieter.immomio.com/favicon.ico',
+      logo_uri: `${SERVICE_URL}/logo.png`,
     },
     client_metadata: {
       jwks: {
