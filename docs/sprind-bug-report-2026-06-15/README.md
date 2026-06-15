@@ -1,6 +1,12 @@
-# SPRIND Bug Report – Address Sub-Field Disclosure (2026-06-15)
+# Address Sub-Field Disclosure Bug – Update 2026-06-15
 
-Update zum bekannten Adress-Bug. **Die Wallet-UI wurde gefixt – die Disclosure-Logik nicht.** Status nach Test mit `IDGo/59` (vorher `IDGo/55`).
+Update zum bekannten Adress-Bug. **Wallet-UI wurde gefixt – die Disclosure-Logik nicht.** Status nach Test mit `IDGo/59` (vorher `IDGo/55`).
+
+> **Zuständigkeit:** Laut SPRIND-Forum (Juni 2026) sitzt der Fix nicht bei SPRIND, sondern in der **EU-Referenzimplementierung (EUDIW-RI)**, von der die deutsche IDGo-Wallet abgeleitet ist:
+>
+> > „Unfortunately the nested field bug needs to be solved in the European reference implementation, so it is outside of our direct control."
+>
+> Dieser Report dient daher als Evidenz-Paket für SPRIND zur Weiterleitung an das EUDIW-RI-Maintainer-Team, nicht als Mängelanzeige an SPRIND selbst.
 
 ## Was sich gegenüber dem Mai-Report geändert hat
 
@@ -85,7 +91,7 @@ Issuer-JWT-Payload (preprod.pid-provider.bundesdruckerei.de) enthält ein `_sd`-
 | Unser SD-JWT-Parser defekt | Alle 3 ankommenden Disclosures werden sauber dekodiert; kein Encoding-Mismatch sichtbar |
 | Credential enthält Adresse nicht | `_sd`-Array hat 11 Einträge → Slots für mehr als die übertragenen 3 Felder |
 
-Bleibt: **Selective-Disclosure-Logik der Wallet für Sub-Object-Claims**. Die Wallet entscheidet auf welche Disclosures sie ins SD-JWT packt – und packt die Adress-Felder konsistent nicht ein, obwohl sie im Consent-Screen so tut.
+Bleibt: **Selective-Disclosure-Logik der Wallet für Sub-Object-Claims**. Die Wallet entscheidet auf welche Disclosures sie ins SD-JWT packt – und packt die Adress-Felder konsistent nicht ein, obwohl sie im Consent-Screen so tut. Per SPRIND-Forum-Aussage ist der zuständige Code in der EU-Referenzimplementierung verortet.
 
 ## Reproduktion
 
