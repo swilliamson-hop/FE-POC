@@ -31,11 +31,15 @@ export async function handleToken(c: Context): Promise<Response> {
   }
 
   if (!preAuthorizedCode) {
+    console.log('[Issuer/Token] missing pre-authorized_code in request')
     return c.json({ error: 'invalid_request', error_description: 'Missing pre-authorized_code' }, 400)
   }
 
   const found = findSessionByPreAuthCode(preAuthorizedCode)
   if (!found) {
+    // Wallet renders this as "Transaktionscode falsch" – misleading. Real cause
+    // is usually that the in-memory session was wiped by a service restart.
+    console.log(`[Issuer/Token] no session for pre-authorized_code=${preAuthorizedCode.slice(0, 12)}... (likely restarted between offer and redemption)`)
     return c.json({ error: 'invalid_grant', error_description: 'Invalid pre-authorized code' }, 400)
   }
 
