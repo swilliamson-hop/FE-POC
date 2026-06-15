@@ -1,5 +1,4 @@
 import { decodeJwt, decodeProtectedHeader, importJWK, jwtVerify } from 'jose'
-import { randomBytes } from 'node:crypto'
 import type { Context } from 'hono'
 import type { JWK } from 'jose'
 import { findSessionByAccessToken, updateIssuanceSession } from '../../lib/issuance-session.js'
@@ -85,13 +84,12 @@ export async function handleCredential(c: Context): Promise<Response> {
 
     console.log(`[Issuer] Credential issued: ${session.credentialType} for ${session.pidClaims.given_name} ${session.pidClaims.family_name}`)
 
-    const newCNonce = randomBytes(16).toString('base64url')
-
+    // OID4VCI Draft 15+ response shape: { credentials: [{ credential }] }.
+    // Older drafts used { credential, format, c_nonce, c_nonce_expires_in };
+    // c_nonce has moved to /issuer/nonce, format is implied by the request's
+    // credential_configuration_id.
     return c.json({
-      credential,
-      format: 'dc+sd-jwt',
-      c_nonce: newCNonce,
-      c_nonce_expires_in: 300,
+      credentials: [{ credential }],
     })
   } catch (err) {
     console.error('[Issuer/Credential] Creation failed:', err)
