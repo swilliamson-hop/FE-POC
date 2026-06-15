@@ -30,36 +30,33 @@ export async function handleCredential(c: Context): Promise<Response> {
     credential_identifier?: string
     credential_configuration_id?: string
     proof?: { proof_type: string; jwt: string }
-    proofs?: Record<string, unknown>
+    proofs?: { jwt?: string[] }
   }>()
 
   console.log(`[Issuer/Credential] Request for session ${sessionId}, format=${body.format}`)
-  console.log('[CRED-DIAG] Full request body:', JSON.stringify({
-    format: body.format,
-    credential_identifier: body.credential_identifier,
-    credential_configuration_id: body.credential_configuration_id,
-    has_proof: !!body.proof,
-    proof_type: body.proof?.proof_type,
-    has_proofs_plural: !!body.proofs,
-  }))
+
+  // Extract the proof JWT. OID4VCI Draft 13 used `proof: { proof_type, jwt }`
+  // (singular); Draft 14+ moved to `proofs: { jwt: [<jwt>, ...] }` (plural,
+  // supports batch). IDGo/59 sends the plural form – without parsing it we
+  // miss the holder key and issue a credential with no `cnf`, which the
+  // wallet then rejects with a generic "credential offer unresolvable" error.
+  const proofJwt =
+    body.proofs?.jwt?.[0] ?? (body.proof?.proof_type === 'jwt' ? body.proof.jwt : undefined)
 
   // Validate proof-of-possession (holder key binding)
   let holderPublicKeyJwk: JWK | undefined
-  if (body.proof?.proof_type === 'jwt' && body.proof.jwt) {
+  if (proofJwt) {
     try {
-      const proofHeader = decodeProtectedHeader(body.proof.jwt)
-      const proofPayload = decodeJwt(body.proof.jwt) as Record<string, unknown>
-
-      console.log('[CRED-DIAG] Proof JWT header keys:', Object.keys(proofHeader), 'alg:', proofHeader.alg, 'kid:', proofHeader.kid, 'has_jwk:', !!proofHeader.jwk)
-      console.log('[CRED-DIAG] Proof JWT payload keys:', Object.keys(proofPayload))
+      const proofHeader = decodeProtectedHeader(proofJwt)
+      const proofPayload = decodeJwt(proofJwt) as Record<string, unknown>
 
       if (proofHeader.jwk) {
         holderPublicKeyJwk = proofHeader.jwk as JWK
         const holderKey = await importJWK(holderPublicKeyJwk, proofHeader.alg ?? 'ES256')
-        await jwtVerify(body.proof.jwt, holderKey, { typ: 'openid4vci-proof+jwt' })
+        await jwtVerify(proofJwt, holderKey, { typ: 'openid4vci-proof+jwt' })
         console.log(`[Issuer/Credential] Proof verified, holder key alg=${proofHeader.alg}`)
       } else {
-        console.warn('[Issuer/Credential] Proof has no jwk in header — credential will be issued without cnf binding')
+        console.warn(`[Issuer/Credential] Proof JWT has no jwk in header (keys=${Object.keys(proofHeader).join(',')}) — credential will lack cnf binding`)
       }
 
       if (session.cNonce && proofPayload.nonce !== session.cNonce) {
@@ -71,7 +68,7 @@ export async function handleCredential(c: Context): Promise<Response> {
       // For POC: continue without holder binding
     }
   } else {
-    console.warn(`[Issuer/Credential] No proof in request (proof_type=${body.proof?.proof_type ?? 'absent'})`)
+    console.warn('[Issuer/Credential] No proof JWT in request body (neither `proof` nor `proofs.jwt[]`)')
   }
 
   try {
