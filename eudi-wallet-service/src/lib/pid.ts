@@ -20,16 +20,21 @@ function extractDisclosedClaims(credential: string): Record<string, unknown> {
   // First part is the issuer JWT, last is KB-JWT, middle parts are disclosures
   const disclosureParts = parts.slice(1, -1)
 
+  console.log(`[PID-DIAG] Total credential parts: ${parts.length}, disclosure parts: ${disclosureParts.length}`)
+
   const disclosed: Record<string, unknown> = {}
 
-  for (const disclosure of disclosureParts) {
+  for (let i = 0; i < disclosureParts.length; i++) {
+    const disclosure = disclosureParts[i]
     try {
+      const json = Buffer.from(disclosure, 'base64url').toString('utf-8')
+      console.log(`[PID-DIAG] Disclosure #${i}: ${disclosure.slice(0, 24)}... → ${json}`)
       const [, claimName, claimValue] = decodeDisclosure(disclosure)
       if (claimName) {
         disclosed[claimName] = claimValue
       }
-    } catch {
-      // Skip malformed disclosures
+    } catch (err) {
+      console.log(`[PID-DIAG] Disclosure #${i} FAILED to decode:`, err)
     }
   }
 
@@ -47,6 +52,9 @@ export function extractPidClaims(credential: string): PidClaims {
   } catch {
     throw new Error('Failed to decode issuer JWT from credential')
   }
+
+  console.log('[PID-DIAG] Issuer JWT payload keys:', Object.keys(issuerPayload))
+  console.log('[PID-DIAG] Issuer JWT full payload:', JSON.stringify(issuerPayload, null, 2))
 
   // Get selectively disclosed claims
   const disclosed = extractDisclosedClaims(credential)
