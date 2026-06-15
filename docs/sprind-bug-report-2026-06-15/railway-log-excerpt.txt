@@ -1,0 +1,73 @@
+Session: d5b7d0b8-3f8f-4724-bbf5-ffff5b7c887d
+Date:    2026-06-15 08:29 UTC
+Wallet:  IDGo/59 CFNetwork/3860.600.12 Darwin/25.5.0 (iPhone OS 18.7)
+RP:      https://fe-poc-production.up.railway.app (Immomio / FE-POC)
+
+--- JAR fetched by wallet ---
+[Request] Wallet fetched JAR for session d5b7d0b8-... from IDGo/59
+
+--- Callback received, JWE decrypted ---
+[Layer 1] direct_post.jwt: decrypting JWE response field
+[Layer 1] Decoded as JSON, keys: vp_token, state
+[Layer 1] DCQL vp_token: extracted credential from set "pid-sd-jwt"
+
+--- Issuer JWT payload (from preprod.pid-provider.bundesdruckerei.de) ---
+[PID-DIAG] Issuer JWT payload keys: [
+  '_sd', 'vct', '_sd_alg', 'iss', 'cnf', 'exp', 'iat', 'status'
+]
+[PID-DIAG] Issuer JWT full payload: {
+  "_sd": [
+    "P38BM9mgCJyX5G7ezZeDxWIFeyYl2dMp6qvkYbge554",
+    "3DGUjwQt482ViVv7Gg2TXxm2Rs1KJFtXqUih5Z0ZPDk",
+    "1wjgPAwLpXxkzaOUZgmpaizthpjkIAvmixppasx4x48",
+    "QveraM3ClkBHR0kZFvPkpYUIdraIhva05dlOcfm38_E",
+    "q8E9yiOCf9xmCpkN1QzV-Ln8TDNUqelZsQRVLiICpcA",
+    "Yw0S3DQJtGFRPILOvVbC0xnFJd_pcy_f0jc0BeCsrbE",
+    "n4ix7iu_74bsrOvXXL5pHkqYXAONreb1cvEC35S-BII",
+    "dZYmr99yu35N_Ghqydw0nYswNqzp7ea_BYzNK37ob30",
+    "OE5PcQArJKxrIZ5zhyzlGQ0PwH3KB9BKUxT7-o60axk",
+    "n60qFPm-O1rJmWhWHHvlaeyOKOvNC-CF1_F2vq3Db6g",
+    "1dIMw6c_9eVFEYWH6CWxgEHD6N6t_ayWzg_XgAiRDBU"
+  ],
+  "vct": "urn:eudi:pid:de:1",
+  "_sd_alg": "sha-256",
+  "iss": "https://preprod.pid-provider.bundesdruckerei.de",
+  "cnf": { "jwk": { "kty": "EC", "crv": "P-256",
+                    "x": "v15U8oXPpZ7u_nCEdz8PDzwpGUT4MJjnxCBFCGPAvTA",
+                    "y": "bbU7cMl732e7IbbvSUSshx58jz5sUQNrIQ9XL59meP0" } },
+  "exp": 1781740800,
+  "iat": 1780531200,
+  "status": {
+    "status_list": {
+      "uri": "https://preprod.pid-provider.bundesdruckerei.de/status/7bd89fe5-4190-4465-8d7c-99de1b67143c",
+      "idx": 94
+    }
+  }
+}
+
+--- SD-JWT disclosure count and content ---
+[PID-DIAG] Total credential parts: 5, disclosure parts: 3
+[PID-DIAG] Disclosure #0: WyJUMGlYOHVvZHU2M3VaM1N6... → ["T0iX8uodu63uZ3SzAxHeNA","family_name","MUSTERMANN"]
+[PID-DIAG] Disclosure #1: WyJTbGdvYUtxNWxsa09OMXo4... → ["SlgoaKq5llkON1z8ha0WbQ","given_name","ERIKA"]
+[PID-DIAG] Disclosure #2: WyItTEVzVklNbE5RSzIzUlJ0... → ["-LEsVIMlNQK23RRtsQjNbw","birthdate","1964-08-12"]
+
+--- Final extracted PID claims ---
+[PID] Disclosed claim names: [ 'family_name', 'given_name', 'birthdate' ]
+[PID] Disclosed claims: {
+  "family_name": "MUSTERMANN",
+  "given_name": "ERIKA",
+  "birthdate": "1964-08-12"
+}
+[PID] No address object found. claims.address = undefined
+[PID] Extracted address fields: {
+  streetAddress: undefined,
+  postalCode: undefined,
+  locality: undefined,
+  country: undefined
+}
+
+--- Summary ---
+Credential allows up to 11 selectively-disclosable claims (length of _sd array).
+Wallet sent only 3 disclosures, none for address sub-fields.
+Wallet's own log shows it intended to send 7 (see eudi-ios-wallet-logs.txt
+"Openid4vp request items" at 09:45:39).
