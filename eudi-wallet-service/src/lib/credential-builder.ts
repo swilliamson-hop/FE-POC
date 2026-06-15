@@ -32,7 +32,9 @@ const saltGenerator: SaltGenerator = (): string => {
 
 function getX5cCerts(): string[] {
   const certChainPem = process.env.CERT_CHAIN!.replace(/\\n/g, '\n')
-  return parseCertChain(certChainPem)
+  // Only the leaf cert in x5c – same rationale as createSignedJar (per SPRIND
+  // 2026-05-08): including the registrar root causes display/validation issues.
+  return [parseCertChain(certChainPem)[0]]
 }
 
 // Mock data for Wohnungsgeberbestätigung
