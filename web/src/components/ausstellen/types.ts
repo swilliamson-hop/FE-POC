@@ -18,7 +18,7 @@ export const CREDENTIAL_CONFIGS: Record<CredentialType, CredentialTypeConfig> = 
       postal_code: '10115',
       locality: 'Berlin',
       move_in_date: '2026-04-01',
-      landlord_name: 'Immobilien GmbH',
+      landlord_name: 'Muster Immobilien GmbH',
     },
     mockClaimLabels: {
       street_address: 'Straße',
@@ -30,10 +30,10 @@ export const CREDENTIAL_CONFIGS: Record<CredentialType, CredentialTypeConfig> = 
   },
   'genossenschaft-mitglied': {
     id: 'genossenschaft-mitglied',
-    title: 'Genossenschafts-Mitgliedsbescheinigung',
+    title: 'Mitgliedsbescheinigung - Genossenschaft',
     description: 'Nachweis der Mitgliedschaft in einer Wohnungsbaugenossenschaft',
     mockClaims: {
-      cooperative_name: 'Berliner Wohnungsbaugenossenschaft eG',
+      cooperative_name: 'Musterhausen Wohnungsbaugenossenschaft eG',
       membership_number: 'BWG-2026-04217',
       member_since: '2026-03-15',
     },

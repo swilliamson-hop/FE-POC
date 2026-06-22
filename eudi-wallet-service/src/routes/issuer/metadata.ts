@@ -62,7 +62,7 @@ export function handleIssuerMetadata(c: Context): Response {
         credential_metadata: {
           display: [
             {
-              name: 'Genossenschafts-Mitgliedsbescheinigung',
+              name: 'Mitgliedsbescheinigung - Genossenschaft',
               locale: 'de-DE',
               description: 'Bescheinigung über die Mitgliedschaft in einer Wohnungsbaugenossenschaft',
               background_color: '#1A7F5A',
