@@ -43,11 +43,6 @@ export default function AusstellenPage() {
             </Link>
           ))}
         </div>
-
-        <div className="mt-8 rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
-          <strong>POC-Hinweis:</strong> Die Bescheinigungsdaten sind Mock-Daten.
-          Nur die PID-Felder (Name, Geburtsdatum) kommen aus der echten EUDI Wallet.
-        </div>
       </div>
     </div>
   )
