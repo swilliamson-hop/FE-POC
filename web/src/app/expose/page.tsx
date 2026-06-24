@@ -176,7 +176,7 @@ function getGroundLabel(ground: string): string {
 }
 
 
-function ExposeContent() {
+export function ExposeContent({ bewerbungPath = '/bewerbung' }: { bewerbungPath?: string } = {}) {
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId') || DEFAULT_PROPERTY_ID;
 
@@ -586,7 +586,7 @@ function ExposeContent() {
       {/* Fixed Apply Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50 safe-area-bottom">
         <div className="max-w-2xl mx-auto">
-          <Link href={`/bewerbung?propertyId=${property.id}`}>
+          <Link href={`${bewerbungPath}?propertyId=${property.id}`}>
             <button
               className="w-full py-4 rounded-xl font-semibold text-white transition-colors"
               style={{
