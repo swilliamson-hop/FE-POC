@@ -45,7 +45,7 @@ export default function AusstellenPage() {
           ))}
         </div>
 
-        <div className="-mt-12 mr-2 flex justify-end overflow-hidden">
+        <div className="-mt-12 flex justify-center overflow-hidden">
           <Image
             src="/immomio-logo.png"
             alt="Immomio"
