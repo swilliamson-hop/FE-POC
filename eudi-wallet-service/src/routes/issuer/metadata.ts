@@ -48,6 +48,21 @@ export function handleIssuerMetadata(c: Context): Response {
               text_color: '#FFFFFF',
             },
           ],
+          // Per-claim display labels. OID4VCI Draft 15 places `claims` directly
+          // under the credential configuration, but we mirror the SPRIND `display`
+          // quirk and nest it inside `credential_metadata` for consistency.
+          claims: [
+            { path: ['given_name'],     display: [{ name: 'Vorname',       locale: 'de-DE' }, { name: 'Given name',    locale: 'en-US' }] },
+            { path: ['family_name'],    display: [{ name: 'Nachname',      locale: 'de-DE' }, { name: 'Family name',   locale: 'en-US' }] },
+            { path: ['birthdate'],      display: [{ name: 'Geburtsdatum',  locale: 'de-DE' }, { name: 'Date of birth', locale: 'en-US' }] },
+            { path: ['street_address'], display: [{ name: 'Straße',        locale: 'de-DE' }, { name: 'Street',        locale: 'en-US' }] },
+            { path: ['postal_code'],    display: [{ name: 'Postleitzahl',  locale: 'de-DE' }, { name: 'Postal code',   locale: 'en-US' }] },
+            { path: ['locality'],       display: [{ name: 'Ort',           locale: 'de-DE' }, { name: 'City',          locale: 'en-US' }] },
+            { path: ['move_in_date'],   display: [{ name: 'Einzugsdatum',  locale: 'de-DE' }, { name: 'Move-in date',  locale: 'en-US' }] },
+            { path: ['landlord_name'],  display: [{ name: 'Vermieter',     locale: 'de-DE' }, { name: 'Landlord',      locale: 'en-US' }] },
+            { path: ['iat'],            display: [{ name: 'Ausgestellt am', locale: 'de-DE' }, { name: 'Issued at',    locale: 'en-US' }] },
+            { path: ['exp'],            display: [{ name: 'Gültig bis',    locale: 'de-DE' }, { name: 'Valid until',   locale: 'en-US' }] },
+          ],
         },
       },
       'genossenschaft-mitglied': {
@@ -75,6 +90,16 @@ export function handleIssuerMetadata(c: Context): Response {
               background_color: '#1A7F5A',
               text_color: '#FFFFFF',
             },
+          ],
+          claims: [
+            { path: ['given_name'],        display: [{ name: 'Vorname',         locale: 'de-DE' }, { name: 'Given name',        locale: 'en-US' }] },
+            { path: ['family_name'],       display: [{ name: 'Nachname',        locale: 'de-DE' }, { name: 'Family name',       locale: 'en-US' }] },
+            { path: ['birthdate'],         display: [{ name: 'Geburtsdatum',    locale: 'de-DE' }, { name: 'Date of birth',     locale: 'en-US' }] },
+            { path: ['cooperative_name'],  display: [{ name: 'Genossenschaft',  locale: 'de-DE' }, { name: 'Cooperative',       locale: 'en-US' }] },
+            { path: ['membership_number'], display: [{ name: 'Mitgliedsnummer', locale: 'de-DE' }, { name: 'Membership number', locale: 'en-US' }] },
+            { path: ['member_since'],      display: [{ name: 'Mitglied seit',   locale: 'de-DE' }, { name: 'Member since',      locale: 'en-US' }] },
+            { path: ['iat'],               display: [{ name: 'Ausgestellt am',  locale: 'de-DE' }, { name: 'Issued at',         locale: 'en-US' }] },
+            { path: ['exp'],               display: [{ name: 'Gültig bis',      locale: 'de-DE' }, { name: 'Valid until',       locale: 'en-US' }] },
           ],
         },
       },
