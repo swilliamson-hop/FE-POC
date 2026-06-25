@@ -69,8 +69,8 @@ function buildGenossenschaftPayload(pid: PidClaims, holderJwk?: JWK) {
     given_name: pid.given_name,
     family_name: pid.family_name,
     birthdate: pid.birthdate,
-    cooperative_name: 'Berliner Wohnungsbaugenossenschaft eG',
-    membership_number: 'BWG-2026-04217',
+    cooperative_name: 'Bauverein der Mionauten eG',
+    membership_number: 'BVM-2026-04217',
     member_since: '2026-03-15',
   }
 }
