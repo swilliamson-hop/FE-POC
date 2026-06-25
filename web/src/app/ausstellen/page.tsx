@@ -45,13 +45,13 @@ export default function AusstellenPage() {
           ))}
         </div>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-2 flex justify-end">
           <Image
             src="/immomio-logo.png"
             alt="Immomio"
-            width={150}
-            height={50}
-            className="h-10 w-auto"
+            width={400}
+            height={400}
+            className="h-40 w-auto"
           />
         </div>
       </div>
