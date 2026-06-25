@@ -51,12 +51,7 @@ export function CredentialPreview({ config, pidClaims }: Props) {
           {mockFields.map((f) => (
             <div key={f.label} className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-200 px-3 py-2">
               <span className="text-sm text-gray-600">{f.label}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-900">{f.value}</span>
-                <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                  Mock
-                </span>
-              </div>
+              <span className="text-sm font-medium text-gray-900">{f.value}</span>
             </div>
           ))}
         </div>
