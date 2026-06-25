@@ -53,7 +53,7 @@ function buildWohnungsgeberPayload(pid: PidClaims, holderJwk?: JWK) {
     postal_code: '10115',
     locality: 'Berlin',
     move_in_date: '2026-04-01',
-    landlord_name: 'Immobilien GmbH',
+    landlord_name: 'Bauverein der Mionauten eG',
   }
 }
 
