@@ -41,14 +41,6 @@ export function handleIssuerMetadata(c: Context): Response {
               text_color: '#FFFFFF',
               background_image: { uri: `${SERVICE_URL}/mionauten-bg.png` },
             },
-            {
-              name: 'Landlord Confirmation',
-              locale: 'en-US',
-              description: 'Landlord confirmation of move-in to a residence',
-              background_color: '#0B1B4D',
-              text_color: '#FFFFFF',
-              background_image: { uri: `${SERVICE_URL}/mionauten-bg.png` },
-            },
           ],
           // Per-claim display labels. OID4VCI Draft 15 places `claims` directly
           // under the credential configuration, but we mirror the SPRIND `display`
@@ -82,14 +74,6 @@ export function handleIssuerMetadata(c: Context): Response {
               name: 'Mitgliedsbescheinigung - Genossenschaft',
               locale: 'de-DE',
               description: 'Bescheinigung über die Mitgliedschaft in einer Wohnungsbaugenossenschaft',
-              background_color: '#0B1B4D',
-              text_color: '#FFFFFF',
-              background_image: { uri: `${SERVICE_URL}/mionauten-bg.png` },
-            },
-            {
-              name: 'Cooperative Membership Certificate',
-              locale: 'en-US',
-              description: 'Certificate of membership in a housing cooperative',
               background_color: '#0B1B4D',
               text_color: '#FFFFFF',
               background_image: { uri: `${SERVICE_URL}/mionauten-bg.png` },
