@@ -9,7 +9,7 @@ export default function AusstellenPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8">
+      <div className="mx-auto max-w-lg px-4 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
             Credential ausstellen
@@ -45,13 +45,13 @@ export default function AusstellenPage() {
           ))}
         </div>
 
-        <div className="mt-auto pt-12 flex justify-center">
+        <div className="mt-6 flex justify-end">
           <Image
             src="/immomio-logo.png"
             alt="Immomio"
-            width={120}
-            height={40}
-            className="h-8 w-auto opacity-60"
+            width={150}
+            height={50}
+            className="h-10 w-auto"
           />
         </div>
       </div>
