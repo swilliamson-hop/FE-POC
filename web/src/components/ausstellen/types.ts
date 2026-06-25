@@ -18,7 +18,7 @@ export const CREDENTIAL_CONFIGS: Record<CredentialType, CredentialTypeConfig> = 
       postal_code: '10115',
       locality: 'Berlin',
       move_in_date: '2026-04-01',
-      landlord_name: 'Muster Immobilien GmbH',
+      landlord_name: 'Bauverein der Mionauten GmbH',
     },
     mockClaimLabels: {
       street_address: 'Straße',

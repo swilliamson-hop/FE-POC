@@ -121,6 +121,18 @@ app.get('/logo.png', (c) =>
   })
 )
 
+// Mionauten card background – referenced by Genossenschaft credential
+// background_image so wallets render it as the credential card art.
+const mionautenBgBuffer = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'mionauten-bg.png')
+)
+app.get('/mionauten-bg.png', (c) =>
+  c.body(mionautenBgBuffer, 200, {
+    'Content-Type': 'image/png',
+    'Cache-Control': 'public, max-age=86400',
+  })
+)
+
 // EUDI Wallet endpoints
 app.post('/initiate', handleInitiate)
 app.get('/request/:sessionId', handleRequest)
