@@ -56,7 +56,7 @@ export default function IssuancePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-lg px-4 py-8">
+      <div className="mx-auto max-w-lg px-4 pt-8 pb-32">
         {/* Header */}
         <div className="mb-6">
           <Link href="/ausstellen" className="text-xs text-blue-600 hover:underline mb-2 inline-block">
