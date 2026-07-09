@@ -11,28 +11,9 @@ import { useApplicationForm } from '@/lib/hooks/useApplicationForm';
 import { applyAsGuest } from '@/lib/api/mutations';
 import type { GuestDataInput, HouseholdType, ProfessionType } from '@/lib/types/application';
 import type { PidClaims } from '@/components/bewerbung/types';
+import { titleCaseFromCaps, splitStreetAddress } from '@/lib/pid';
 
 const TOTAL_STEPS = 4;
-
-// Showcase: PID-Adressfelder werden aktuell von der Wallet nicht sauber ausgelesen.
-// Wir simulieren die in der PID hinterlegten Werte hart verdrahtet.
-const SHOWCASE_PID_ADDRESS = {
-  street: 'Heidestraße',
-  houseNumber: '17',
-  zipCode: '51147',
-  city: 'Köln',
-};
-
-// PID liefert Namen vollständig in Großbuchstaben (z. B. "ERIKA", "MUSTERMANN").
-// Wir normalisieren zu "Erika" / "Mustermann" und respektieren Bindestriche/Leerzeichen.
-function normalizeName(s: string | undefined): string {
-  if (!s) return '';
-  return s
-    .toLowerCase()
-    .split(/([\s-])/)
-    .map((part) => (/[\s-]/.test(part) || part.length === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)))
-    .join('');
-}
 
 function BewerbungV2Content() {
   const searchParams = useSearchParams();
@@ -45,26 +26,24 @@ function BewerbungV2Content() {
   const [walletVerifiedFields, setWalletVerifiedFields] = useState<Set<string>>(new Set());
 
   const handlePidReceived = (claims: PidClaims) => {
-    const verified = new Set([
-      'firstname',
-      'lastname',
-      'street',
-      'houseNumber',
-      'zipCode',
-      'city',
-      'country',
-    ]);
+    const { street, houseNumber } = splitStreetAddress(claims.street_address);
+
+    const verified = new Set(['firstname', 'lastname']);
     if (claims.birthdate) verified.add('dateOfBirth');
+    if (street) verified.add('street');
+    if (houseNumber) verified.add('houseNumber');
+    if (claims.postal_code) verified.add('zipCode');
+    if (claims.locality) verified.add('city');
     setWalletVerifiedFields(verified);
 
     updateFields({
-      firstname: normalizeName(claims.given_name),
-      lastname: normalizeName(claims.family_name),
+      firstname: titleCaseFromCaps(claims.given_name),
+      lastname: titleCaseFromCaps(claims.family_name),
       dateOfBirth: claims.birthdate,
-      street: SHOWCASE_PID_ADDRESS.street,
-      houseNumber: SHOWCASE_PID_ADDRESS.houseNumber,
-      zipCode: SHOWCASE_PID_ADDRESS.zipCode,
-      city: SHOWCASE_PID_ADDRESS.city,
+      ...(street ? { street: titleCaseFromCaps(street) } : {}),
+      ...(houseNumber ? { houseNumber } : {}),
+      ...(claims.postal_code ? { zipCode: claims.postal_code } : {}),
+      ...(claims.locality ? { city: titleCaseFromCaps(claims.locality) } : {}),
     });
   };
 

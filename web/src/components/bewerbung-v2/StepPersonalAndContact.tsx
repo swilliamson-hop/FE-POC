@@ -86,17 +86,32 @@ export function StepPersonalAndContact({
   const [streetQuery, setStreetQuery] = useState(street);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  // Verhindert, dass das Autocomplete-Dropdown aufpoppt, wenn die Straße
-  // extern gesetzt wurde (z. B. durch Wallet-Pre-Fill) statt durch User-Eingabe.
-  const skipNextSearchRef = useRef(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const streetContainerRef = useRef<HTMLDivElement>(null);
 
+  // Sync streetQuery und Dropdown-State, wenn die Straße extern gesetzt wird
+  // (z. B. durch Wallet-Prefill). Ein Search wird bewusst NICHT ausgelöst.
   useEffect(() => {
     if (street !== streetQuery) {
-      skipNextSearchRef.current = true;
       setStreetQuery(street);
+      setSuggestions([]);
+      setShowSuggestions(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [street]);
+
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (
+        streetContainerRef.current &&
+        !streetContainerRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
+  }, []);
 
   const isNextEnabled = firstname.trim().length > 0 && lastname.trim().length > 0;
 
@@ -117,6 +132,7 @@ export function StepPersonalAndContact({
   const searchAddresses = useCallback(async (query: string) => {
     if (query.length < 3) {
       setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
     const results = await searchAddress(query);
@@ -125,15 +141,10 @@ export function StepPersonalAndContact({
   }, []);
 
   useEffect(() => {
-    if (skipNextSearchRef.current) {
-      skipNextSearchRef.current = false;
-      return;
-    }
-    const timeoutId = setTimeout(() => {
-      searchAddresses(streetQuery);
-    }, 300);
-    return () => clearTimeout(timeoutId);
-  }, [streetQuery, searchAddresses]);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const handleSuggestionSelect = (suggestion: AddressSuggestion) => {
     onStreetChange(suggestion.street);
@@ -147,6 +158,10 @@ export function StepPersonalAndContact({
   const handleStreetInputChange = (value: string) => {
     setStreetQuery(value);
     onStreetChange(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      searchAddresses(value);
+    }, 300);
   };
 
   const countryOptions = [{ value: 'DE', label: 'Deutschland' }];
@@ -217,7 +232,7 @@ export function StepPersonalAndContact({
 
       <div className="relative">
         <div className="grid grid-cols-3 gap-4">
-          <div className="col-span-2 relative">
+          <div className="col-span-2 relative" ref={streetContainerRef}>
             <Input
               label={
                 <span className="flex items-center gap-2">

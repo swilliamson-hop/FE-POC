@@ -12,6 +12,7 @@ import { useApplicationForm } from '@/lib/hooks/useApplicationForm';
 import { applyAsGuest } from '@/lib/api/mutations';
 import type { GuestDataInput, HouseholdType, ProfessionType } from '@/lib/types/application';
 import type { PidClaims } from '@/components/bewerbung/types';
+import { titleCaseFromCaps, splitStreetAddress } from '@/lib/pid';
 
 const TOTAL_STEPS = 5;
 
@@ -26,20 +27,24 @@ function BewerbungContent() {
   const [walletVerifiedFields, setWalletVerifiedFields] = useState<Set<string>>(new Set());
 
   const handlePidReceived = (claims: PidClaims) => {
+    const { street, houseNumber } = splitStreetAddress(claims.street_address);
+
     const verified = new Set(['firstname', 'lastname']);
     if (claims.birthdate) verified.add('dateOfBirth');
-    if (claims.street_address) verified.add('street');
+    if (street) verified.add('street');
+    if (houseNumber) verified.add('houseNumber');
     if (claims.postal_code) verified.add('zipCode');
     if (claims.locality) verified.add('city');
     setWalletVerifiedFields(verified);
 
     updateFields({
-      firstname: claims.given_name,
-      lastname: claims.family_name,
+      firstname: titleCaseFromCaps(claims.given_name),
+      lastname: titleCaseFromCaps(claims.family_name),
       dateOfBirth: claims.birthdate,
-      ...(claims.street_address ? { street: claims.street_address } : {}),
+      ...(street ? { street: titleCaseFromCaps(street) } : {}),
+      ...(houseNumber ? { houseNumber } : {}),
       ...(claims.postal_code ? { zipCode: claims.postal_code } : {}),
-      ...(claims.locality ? { city: claims.locality } : {}),
+      ...(claims.locality ? { city: titleCaseFromCaps(claims.locality) } : {}),
     });
   };
 
