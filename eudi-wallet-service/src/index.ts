@@ -121,11 +121,20 @@ app.get('/logo.png', (c) =>
   })
 )
 
-// Mionauten card background – referenced by Genossenschaft credential
+// Mionauten card background – referenced by Wohnungsgeberbestätigung credential
 // background_image so wallets render it as the credential card art.
-const mionautenBgBuffer = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'mionauten-bg.png')
+const mionautenWallpaperBuffer = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'Bauverein Mionauten Credential wallpaper.png')
 )
+app.get('/mionauten-wallpaper.png', (c) =>
+  c.body(mionautenWallpaperBuffer, 200, {
+    'Content-Type': 'image/png',
+    'Cache-Control': 'public, max-age=86400',
+  })
+)
+
+// Legacy background – kept for cache continuity, serves same new wallpaper
+const mionautenBgBuffer = mionautenWallpaperBuffer
 app.get('/mionauten-bg.png', (c) =>
   c.body(mionautenBgBuffer, 200, {
     'Content-Type': 'image/png',
