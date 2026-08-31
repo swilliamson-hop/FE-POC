@@ -39,7 +39,11 @@ export function handleIssuerMetadata(c: Context): Response {
               description: 'Bestätigung des Vermieters über den Einzug in eine Wohnung',
               background_color: '#0B1B4D',
               text_color: '#FFFFFF',
-              background_image: { uri: `${SERVICE_URL}/mionauten-bg.png` },
+              // Try `url` (newer OID4VCI spec) alongside `uri` (older spec) –
+              // wallet app update (2026-08-28) broke background_image in list view;
+              // testing if the key name change restores it.
+              background_image: { url: `${SERVICE_URL}/mionauten-bg.png`, uri: `${SERVICE_URL}/mionauten-bg.png` },
+              logo: { url: `${SERVICE_URL}/logo.png`, uri: `${SERVICE_URL}/logo.png`, alt_text: 'Immomio' },
             },
             // SPRIND wallet quirk (2026-06-25): with only one display entry
             // it stops rendering the background_image on the detail screen.
@@ -52,7 +56,8 @@ export function handleIssuerMetadata(c: Context): Response {
               description: 'Landlord confirmation of move-in to a residence',
               background_color: '#0B1B4D',
               text_color: '#FFFFFF',
-              background_image: { uri: `${SERVICE_URL}/mionauten-bg.png` },
+              background_image: { url: `${SERVICE_URL}/mionauten-bg.png`, uri: `${SERVICE_URL}/mionauten-bg.png` },
+              logo: { url: `${SERVICE_URL}/logo.png`, uri: `${SERVICE_URL}/logo.png`, alt_text: 'Immomio' },
             },
           ],
           // Per-claim display labels. OID4VCI Draft 15 places `claims` directly
@@ -89,7 +94,8 @@ export function handleIssuerMetadata(c: Context): Response {
               description: 'Bescheinigung über die Mitgliedschaft in einer Wohnungsbaugenossenschaft',
               background_color: '#0B1B4D',
               text_color: '#FFFFFF',
-              background_image: { uri: `${SERVICE_URL}/mionauten-bg.png` },
+              background_image: { url: `${SERVICE_URL}/mionauten-bg.png`, uri: `${SERVICE_URL}/mionauten-bg.png` },
+              logo: { url: `${SERVICE_URL}/logo.png`, uri: `${SERVICE_URL}/logo.png`, alt_text: 'Immomio' },
             },
             // Same SPRIND quirk workaround as Wohnungsgeber above —
             // see comment on that credential's display array.
@@ -99,7 +105,8 @@ export function handleIssuerMetadata(c: Context): Response {
               description: 'Certificate of membership in a housing cooperative',
               background_color: '#0B1B4D',
               text_color: '#FFFFFF',
-              background_image: { uri: `${SERVICE_URL}/mionauten-bg.png` },
+              background_image: { url: `${SERVICE_URL}/mionauten-bg.png`, uri: `${SERVICE_URL}/mionauten-bg.png` },
+              logo: { url: `${SERVICE_URL}/logo.png`, uri: `${SERVICE_URL}/logo.png`, alt_text: 'Immomio' },
             },
           ],
           claims: [
