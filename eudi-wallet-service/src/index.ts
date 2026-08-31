@@ -114,18 +114,15 @@ app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOStri
 const logoBuffer = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'immomio-logo-rund.png')
 )
+// no-store so the wallet always fetches the current version after updates
 app.get('/logo.png', (c) =>
-  c.body(logoBuffer, 200, {
-    'Content-Type': 'image/png',
-    'Cache-Control': 'public, max-age=86400',
-  })
+  c.body(logoBuffer, 200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' })
 )
-// New versioned URL to bust wallet cache after logo swap (2026-08-31)
 app.get('/immomio-logo-rund.png', (c) =>
-  c.body(logoBuffer, 200, {
-    'Content-Type': 'image/png',
-    'Cache-Control': 'public, max-age=86400',
-  })
+  c.body(logoBuffer, 200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' })
+)
+app.get('/immomio-logo-rund-v2.png', (c) =>
+  c.body(logoBuffer, 200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' })
 )
 
 // Mionauten card background – referenced by Wohnungsgeberbestätigung credential
