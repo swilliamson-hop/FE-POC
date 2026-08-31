@@ -120,6 +120,13 @@ app.get('/logo.png', (c) =>
     'Cache-Control': 'public, max-age=86400',
   })
 )
+// New versioned URL to bust wallet cache after logo swap (2026-08-31)
+app.get('/immomio-logo-rund.png', (c) =>
+  c.body(logoBuffer, 200, {
+    'Content-Type': 'image/png',
+    'Cache-Control': 'public, max-age=86400',
+  })
+)
 
 // Mionauten card background – referenced by Wohnungsgeberbestätigung credential
 // background_image so wallets render it as the credential card art.
