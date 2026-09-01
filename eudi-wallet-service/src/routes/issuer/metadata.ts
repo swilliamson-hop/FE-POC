@@ -43,7 +43,7 @@ export function handleIssuerMetadata(c: Context): Response {
               // wallet app update (2026-08-28) broke background_image in list view;
               // testing if the key name change restores it.
               background_image: { url: `${SERVICE_URL}/mionauten-bg.png`, uri: `${SERVICE_URL}/mionauten-bg.png` },
-              logo: { url: `${SERVICE_URL}/immomio-logo-rund-v2.png`, uri: `${SERVICE_URL}/immomio-logo-rund-v2.png`, alt_text: 'Immomio' },
+              logo: { url: `${SERVICE_URL}/immomio-logo-rund-v3.png`, uri: `${SERVICE_URL}/immomio-logo-rund-v3.png`, alt_text: 'Immomio' },
             },
             // SPRIND wallet quirk (2026-06-25): with only one display entry
             // it stops rendering the background_image on the detail screen.
@@ -57,7 +57,7 @@ export function handleIssuerMetadata(c: Context): Response {
               background_color: '#0B1B4D',
               text_color: '#FFFFFF',
               background_image: { url: `${SERVICE_URL}/mionauten-bg.png`, uri: `${SERVICE_URL}/mionauten-bg.png` },
-              logo: { url: `${SERVICE_URL}/immomio-logo-rund-v2.png`, uri: `${SERVICE_URL}/immomio-logo-rund-v2.png`, alt_text: 'Immomio' },
+              logo: { url: `${SERVICE_URL}/immomio-logo-rund-v3.png`, uri: `${SERVICE_URL}/immomio-logo-rund-v3.png`, alt_text: 'Immomio' },
             },
           ],
           // Per-claim display labels. OID4VCI Draft 15 places `claims` directly
@@ -95,7 +95,7 @@ export function handleIssuerMetadata(c: Context): Response {
               background_color: '#0B1B4D',
               text_color: '#FFFFFF',
               background_image: { url: `${SERVICE_URL}/mionauten-bg.png`, uri: `${SERVICE_URL}/mionauten-bg.png` },
-              logo: { url: `${SERVICE_URL}/immomio-logo-rund-v2.png`, uri: `${SERVICE_URL}/immomio-logo-rund-v2.png`, alt_text: 'Immomio' },
+              logo: { url: `${SERVICE_URL}/immomio-logo-rund-v3.png`, uri: `${SERVICE_URL}/immomio-logo-rund-v3.png`, alt_text: 'Immomio' },
             },
             // Same SPRIND quirk workaround as Wohnungsgeber above —
             // see comment on that credential's display array.
@@ -106,7 +106,7 @@ export function handleIssuerMetadata(c: Context): Response {
               background_color: '#0B1B4D',
               text_color: '#FFFFFF',
               background_image: { url: `${SERVICE_URL}/mionauten-bg.png`, uri: `${SERVICE_URL}/mionauten-bg.png` },
-              logo: { url: `${SERVICE_URL}/immomio-logo-rund-v2.png`, uri: `${SERVICE_URL}/immomio-logo-rund-v2.png`, alt_text: 'Immomio' },
+              logo: { url: `${SERVICE_URL}/immomio-logo-rund-v3.png`, uri: `${SERVICE_URL}/immomio-logo-rund-v3.png`, alt_text: 'Immomio' },
             },
           ],
           claims: [

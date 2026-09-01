@@ -124,6 +124,9 @@ app.get('/immomio-logo-rund.png', (c) =>
 app.get('/immomio-logo-rund-v2.png', (c) =>
   c.body(logoBuffer, 200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' })
 )
+app.get('/immomio-logo-rund-v3.png', (c) =>
+  c.body(logoBuffer, 200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' })
+)
 
 // Mionauten card background – referenced by Wohnungsgeberbestätigung credential
 // background_image so wallets render it as the credential card art.
