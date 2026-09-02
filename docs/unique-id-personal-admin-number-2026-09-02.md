@@ -206,3 +206,37 @@ Dienste hinweg *nicht* verkettbar ist.
 
 **Nächster Schritt:** Mirko im selben Thread nach dem Pseudonym-Use-Case fragen
 (Unterstützung in der SPRIND-Wallet? Anfrage-Mechanismus in OpenID4VP/SIOPv2?).
+
+## 8. SPRIND-Antwort zum Pseudonym (2026-09-02, 2. Runde)
+
+Mirko Mollik (nach interner Rücksprache):
+
+- **Pseudonyme sind nicht spezifiziert.** Wie Pseudonyme funktionieren, ist weder
+  in den Implementing Acts noch bei ETSI geregelt — jedes Land/jede Wallet kann es
+  anders umsetzen. Eine **native Pseudonym-Funktion** der Wallet wird es **zum
+  Start nicht** geben; Zeitpunkt offen.
+- **Empfohlener Weg: eigenes Credential ausstellen.** Statt auf eine Wallet-
+  Pseudonym-Funktion zu warten, können **wir selbst der Wallet ein Credential (EAA)
+  ausstellen**, das sie beim Login präsentiert. → Nutzt unseren bereits
+  funktionierenden Issuance-Stack (POC 2). Ist **schlüsselgebunden** (Holder
+  Binding an den Wallet-Key).
+- **Kein Ein-Pseudonym-pro-RP-Zwang.** Es gibt **keinen Mechanismus**, der
+  sicherstellt, dass eine Wallet nur EIN Pseudonym pro Relying Party hat.
+- **PID-Weg ausdrücklich nicht empfohlen — mit Rechtsgrund:** Wir sollen dem Nutzer
+  ein Pseudonym anbieten, weil wir **nicht unter eine nationale
+  Identifizierungspflicht (z. B. GWG/Geldwäsche)** fallen. Nur Stellen mit
+  gesetzlicher Identifizierungspflicht dürfen die PID zur eindeutigen
+  Identifizierung heranziehen — Immomio nicht.
+
+### Revidiertes Fazit
+
+| Ziel | Mit EUDI-Wallet erreichbar? |
+|---|---|
+| **Wallet als Login / denselben Wallet-Inhaber wiedererkennen** | **Ja, konform** — via selbst ausgestelltem, schlüsselgebundenem Credential (auf POC-2-Basis) |
+| **Verhindern, dass eine reale Person mehrere Accounts anlegt** | **Nein** — kein Ein-Pseudonym-pro-RP-Zwang; 1 Person + 2 Wallets = 2 Credentials; ein selbst ausgestelltes Credential kann den **ersten** Doppel-Account nicht blocken (Betrüger-Wallet hat es schlicht noch nicht) |
+
+**Bottom line:** Der ursprüngliche Anti-Fraud-Zweck (Sybil-Schutz „eine Person =
+max. ein Account") ist mit der Wallet **by design nicht** lösbar. Erreichbar und
+sauber ist **Wallet-Login mit Wiedererkennung derselben Wallet** — verhindert
+versehentliche Doppel-Accounts, aber keinen vorsätzlichen Missbrauch mit zweitem
+Gerät. Restrisiko produktseitig/über Nicht-Wallet-Signale zu behandeln.
