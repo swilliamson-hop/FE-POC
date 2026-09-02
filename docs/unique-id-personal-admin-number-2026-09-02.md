@@ -4,8 +4,13 @@
 > Identitätsdaten, aber nicht, dass dieselbe reale Person mehrfach Profile mit
 > identischen Daten anlegt. Ziel: einen **persistenten, personen-eindeutigen
 > Identifier** aus der PID mitanfragen, um Dubletten erkennen zu können.
-> **Status:** Phase 1 (additive DCQL-Erweiterung + Diagnose) implementiert,
-> Sandbox-Verifikation offen.
+> **Status: ABGESCHLOSSEN (2026-09-02).** `personal_administrative_number` wird
+> von der preprod-PID nicht ausgestellt (belegt), und ein PID-basierter
+> Dubletten-Check ist für Immomio rechtlich nicht zulässig (SPRIND/eIDAS: keine
+> nationale Identifizierungspflicht). Anti-Fraud-Ziel „eine Person = max. ein
+> Account" ist mit der Wallet **by design nicht** lösbar. Die additive
+> DCQL-Anfrage bleibt drin (schadet nicht). Compliant erreichbar wäre nur
+> Wallet-Login via selbst ausgestelltem Credential. Details siehe unten.
 
 ---
 
