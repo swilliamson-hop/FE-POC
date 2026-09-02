@@ -152,3 +152,57 @@ enthält den Wert einfach nicht.
   in der preprod-PID befüllt wird (analog zum Adress-Disclosure-Report).
 - Alternativ prüfen, ob ein anderer persistenter Identifier (z. B. aus einer
   späteren Rulebook-Version) verfügbar wird.
+
+---
+
+## 6. SPRIND-Forum-Bestätigung (2026-09-02)
+
+Auf Nachfrage im SPRIND-Forum hat **Mirko Mollik (SPRIND)** bestätigt, dass der
+fehlende Identifier **kein Sandbox-Defekt, sondern eine bewusste Entscheidung**
+ist:
+
+> „Es gibt kein direktes Feld, welches als stabil angesehen werden kann, wie
+> z. B. die Steuernummer."
+>
+> „Uns ist klar, dass es sicherlich Fälle in Deutschland geben wird, wo dieser
+> Datensatz doppelt ist. Aber seitens Datenschutz wurde sich hier klar gegen
+> eine eindeutige Nummer in der PID entschieden."
+>
+> Empfehlung für unseren Fall: Abfrage von **Vorname, Nachname, Geburtsort und
+> Geburtstag**. Das **BMDS** werde dazu noch eine Empfehlung veröffentlichen.
+
+**Wichtiger Vorbehalt (Mirko):**
+
+> „Melde mich aber noch, da die Lösung eigentlich gegen die eIDAS verstößt."
+
+→ Gemeint ist der **Stammdaten-Workaround** (Name + Geburtsort + Geburtstag als
+Kombi-Schlüssel). Damit baut man faktisch doch einen persistenten, personen-
+eindeutigen Identifier nach – genau das, was eIDAS2 (VO (EU) 2024/1183) durch das
+Weglassen einer eindeutigen Nummer bewusst verhindern will. Kollidiert mit
+**Unlinkability, Datenminimierung und Zweckbindung** (auch GDPR Art. 5). Exakte
+Fundstelle liefert Mirko in seiner Rückmeldung nach; **DSB/Legal vor jeder
+Umsetzung einbinden.**
+
+**Konsequenz:** Sowohl die `personal_administrative_number` (nicht vorhanden) als
+auch der Stammdaten-Hash-Fallback (rechtlich problematisch) scheiden aktuell aus.
+Ein technischer Dubletten-Check über die PID ist damit **by design nicht
+vorgesehen**.
+
+## 7. Offene Alternative: Wallet-Login via RP-spezifischem Pseudonym
+
+Der eIDAS2/ARF **Pseudonym-Use-Case** ist der *vorgesehene, datenschutzkonforme*
+Weg, wiederkehrende Nutzer zu erkennen: Die Wallet präsentiert dem RP ein
+**stabiles, RP-spezifisches Pseudonym** (schlüsselgebunden), das über andere
+Dienste hinweg *nicht* verkettbar ist.
+
+- **Löst:** „Wallet als Login" + Wiedererkennung desselben Wallet-Inhabers bei uns
+  → verhindert versehentliche Doppel-Accounts mit **derselben** Wallet.
+- **Löst NICHT vollständig:** Das Pseudonym ist an die **Wallet-Instanz/den
+  Schlüssel** gebunden, **nicht an die Person**. Eine Person mit zwei
+  Geräten/Wallets erzeugt zwei Pseudonyme → weiterhin zwei Accounts möglich
+  (kein voller Sybil-Schutz – dieselbe bewusste Design-Grenze).
+- **Warum konform (im Gegensatz zum Stammdaten-Hash):** Das Pseudonym ist gerade
+  *nicht* personen-eindeutig/cross-context – deshalb erlaubt.
+
+**Nächster Schritt:** Mirko im selben Thread nach dem Pseudonym-Use-Case fragen
+(Unterstützung in der SPRIND-Wallet? Anfrage-Mechanismus in OpenID4VP/SIOPv2?).
