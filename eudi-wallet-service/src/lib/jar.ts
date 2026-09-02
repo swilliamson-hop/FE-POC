@@ -57,6 +57,35 @@ export function buildDcqlQuery(): DcqlQuery {
           { id: 'pid_address_postal_code', path: ['address', 'postal_code'] },
           { id: 'pid_address_locality', path: ['address', 'locality'] },
           { id: 'pid_address_country', path: ['address', 'country'] },
+          // Persistent, provider-unique person identifier (eIDAS2 PID Rulebook).
+          // Top-level claim, optional in the credential — requested via claim_sets
+          // below so its absence never breaks credential matching.
+          { id: 'pid_personal_admin_number', path: ['personal_administrative_number'] },
+        ],
+        // Preference-ordered claim sets keep the new attribute additive:
+        // option 1 (with personal_administrative_number) is preferred; if the PID
+        // lacks it, the wallet falls back to option 2 — the exact set requested
+        // before this change — so the existing flow is unaffected.
+        claim_sets: [
+          [
+            'pid_given_name',
+            'pid_family_name',
+            'pid_birthdate',
+            'pid_address_street',
+            'pid_address_postal_code',
+            'pid_address_locality',
+            'pid_address_country',
+            'pid_personal_admin_number',
+          ],
+          [
+            'pid_given_name',
+            'pid_family_name',
+            'pid_birthdate',
+            'pid_address_street',
+            'pid_address_postal_code',
+            'pid_address_locality',
+            'pid_address_country',
+          ],
         ],
       },
     ],

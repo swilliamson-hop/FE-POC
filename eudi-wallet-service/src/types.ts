@@ -20,6 +20,10 @@ export interface PidClaims {
   postal_code?: string
   locality?: string
   country?: string
+  // Persistent, provider-unique person identifier (eIDAS2 PID Rulebook).
+  // Optional in the credential; used for cross-application duplicate detection.
+  // Never surfaced or stored in plaintext beyond this transient claims object.
+  personal_administrative_number?: string
 }
 
 export interface InitiateResponse {
@@ -54,6 +58,10 @@ export interface DcqlCredential {
     doctype_value?: string
   }
   claims: DcqlClaim[]
+  // Optional per OpenID4VP DCQL: arrays of claim ids the wallet may satisfy,
+  // in preference order. Lets us request an optional claim additively without
+  // making the whole credential fail to match when that claim is absent.
+  claim_sets?: string[][]
 }
 
 export interface DcqlClaim {

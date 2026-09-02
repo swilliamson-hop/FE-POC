@@ -76,6 +76,17 @@ export function extractPidClaims(credential: string): PidClaims {
 
   console.log('[PID] Extracted address fields:', { streetAddress, postalCode, locality, country })
 
+  // Persistent, provider-unique person identifier (eIDAS2 PID Rulebook, top-level,
+  // optional). Diagnostic only logs presence + length — never the plaintext value,
+  // since it is a personal identifier we intend to store hashed (Phase 2).
+  const personalAdminRaw = claims.personal_administrative_number
+  const hasPersonalAdmin =
+    personalAdminRaw !== undefined && personalAdminRaw !== null && String(personalAdminRaw).trim() !== ''
+  console.log(
+    '[PID-DIAG] personal_administrative_number:',
+    hasPersonalAdmin ? `present (len=${String(personalAdminRaw).length})` : 'ABSENT',
+  )
+
   // Build PidClaims
   const pidClaims: PidClaims = {
     given_name: String(claims.given_name ?? ''),
@@ -85,6 +96,7 @@ export function extractPidClaims(credential: string): PidClaims {
     postal_code: postalCode ? String(postalCode) : undefined,
     locality: locality ? String(locality) : undefined,
     country: country ? String(country) : undefined,
+    personal_administrative_number: hasPersonalAdmin ? String(personalAdminRaw) : undefined,
   }
 
   return pidClaims

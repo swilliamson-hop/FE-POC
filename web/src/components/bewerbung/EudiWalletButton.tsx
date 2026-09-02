@@ -123,16 +123,27 @@ export function EudiWalletButton({ onPidReceived }: Props) {
   }
 
   if (flow.status === 'success') {
+    const personalId = flow.pidClaims.personal_administrative_number
     return (
-      <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
-        <span className="text-green-600 font-semibold">✓</span>
-        <span>Daten aus EU Digital Identity Wallet übernommen</span>
-        <button
-          onClick={handleReset}
-          className="ml-auto text-xs text-green-600 underline hover:no-underline"
-        >
-          Zurücksetzen
-        </button>
+      <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+        <div className="flex items-center gap-2">
+          <span className="text-green-600 font-semibold">✓</span>
+          <span>Daten aus EU Digital Identity Wallet übernommen</span>
+          <button
+            onClick={handleReset}
+            className="ml-auto text-xs text-green-600 underline hover:no-underline"
+          >
+            Zurücksetzen
+          </button>
+        </div>
+        <div className="mt-2 border-t border-green-200 pt-2 text-xs">
+          <span className="font-medium">Persistente Personen-ID:</span>{' '}
+          {personalId ? (
+            <span className="font-mono break-all">{personalId}</span>
+          ) : (
+            <span className="italic text-green-700/70">nicht im PID enthalten</span>
+          )}
+        </div>
       </div>
     )
   }
