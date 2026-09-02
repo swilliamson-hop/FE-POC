@@ -101,29 +101,54 @@ serverseitig durchgeführt werden.
 
 ---
 
-## 4. Ergebnis (auszufüllen nach dem Test)
+## 4. Ergebnis (Test 2026-09-02, IDGo-Wallet gegen Bundesdruckerei preprod)
 
 | Frage | Ergebnis |
 |---|---|
-| `personal_administrative_number` im VP-Token vorhanden? | _offen_ |
-| Länge / Format | _offen_ |
-| Über mehrere Präsentationen derselben Identität stabil? | _offen_ |
-| Zwischen verschiedenen Testidentitäten unterschiedlich? | _offen_ |
-| `claim_sets` von IDGo akzeptiert (Flow unverändert ok)? | _offen_ |
+| `personal_administrative_number` im VP-Token vorhanden? | **Nein** – `[PID-DIAG] personal_administrative_number: ABSENT` |
+| Länge / Format | n/a (nicht geliefert) |
+| Über mehrere Präsentationen derselben Identität stabil? | n/a (nicht geliefert) |
+| Zwischen verschiedenen Testidentitäten unterschiedlich? | n/a (nicht geliefert) |
+| `claim_sets` von IDGo akzeptiert (Flow unverändert ok)? | **Ja** – mit `claim_sets` läuft der Flow normal (Wallet wählt den Fallback-Satz) |
 
----
+### Beweisführung (zwei Schritte)
 
-## 5. Nächster Schritt (Phase 2 – nur wenn Attribut nutzbar)
+1. **Mit `claim_sets` (additiv):** Flow erfolgreich, aber
+   `[PID-DIAG] … ABSENT`. Die Wallet wählte den Fallback-Satz ohne
+   `personal_administrative_number` → sie konnte den bevorzugten Satz
+   *mit* dem Attribut nicht erfüllen.
+2. **Ohne `claim_sets` (Attribut als Pflicht-Claim, Diagnose-Experiment
+   `9334646`):** Bereits **das Scannen des QR-Codes** schlug fehl – die
+   Wallet fand **kein passendes Credential**. Das bestätigt eindeutig:
+   das preprod-PID **enthält `personal_administrative_number` nicht**.
+   Experiment danach revertiert (zurück auf die sichere `claim_sets`-Variante).
 
-Bei bestätigter Lieferung eines brauchbaren Werts:
-- `identity-hash.ts`: **HMAC-SHA256(pepper, wert)**, Pepper aus `PID_ID_PEPPER`
-  (ENV). Kein Klartext-Speichern.
-- In-Memory-Registry der gesehenen Hashes (POC; **Caveat:** wird bei jedem
-  Railway-Redeploy zurückgesetzt → Dubletten-Check nur innerhalb eines
-  Uptime-Fensters).
-- Check-Funktion: neuer Hash gegen Registry → klares Flag
-  `duplicateOfPriorPresentation` am Session-Ergebnis. **Kein automatisches
-  Blocken.**
+## 5. Fazit – BLOCKER (sandboxseitig nicht nutzbar)
 
-Wird das Attribut **nicht** geliefert: als **Blocker** dokumentieren, keine
-Fallback-Lösung erzwingen.
+**`personal_administrative_number` wird von der Bundesdruckerei-preprod-PID
+derzeit nicht ausgestellt.** Das Attribut ist im PID-Rulebook **optional**,
+und dieser Provider befüllt es (Stand 2026-09-02) nicht. Damit ist der
+Persistente-Personen-ID-basierte Dubletten-Check **sandboxseitig nicht
+umsetzbar** – es gibt schlicht keinen Wert zum Hashen/Abgleichen.
+
+Kein Fehler in unserer DCQL-Anfrage (Feldname + Pfad sind korrekt, Wallet
+interpretiert sie richtig) und kein Disclosure-Bug (das Attribut ist
+top-level, nicht vom Nested-Address-Thema betroffen) – das Credential
+enthält den Wert einfach nicht.
+
+### Was bleibt bestehen (additiv, ohne Wirkung bis Provider liefert)
+- DCQL fragt `personal_administrative_number` weiter via `claim_sets` an –
+  **schadet nicht**, greift automatisch sobald ein Provider das Attribut liefert.
+- Backend-Extraktion + `[PID-DIAG]`-Log bleiben als Monitoring.
+- Frontend zeigt „nicht im PID enthalten".
+
+### Offen / nächste Schritte (produktseitig zu entscheiden)
+- **Phase 2 (Hashing + Dedup) ist blockiert**, bis ein PID-Provider
+  `personal_administrative_number` tatsächlich ausstellt. Vorgesehenes Design
+  bleibt gültig: HMAC-SHA256(`PID_ID_PEPPER`, Wert), In-Memory-Registry
+  (Caveat: Reset bei Redeploy), Flag `duplicateOfPriorPresentation`, kein
+  automatisches Blocken.
+- Bei SPRIND/Bundesdruckerei nachfragen, ob/wann `personal_administrative_number`
+  in der preprod-PID befüllt wird (analog zum Adress-Disclosure-Report).
+- Alternativ prüfen, ob ein anderer persistenter Identifier (z. B. aus einer
+  späteren Rulebook-Version) verfügbar wird.
