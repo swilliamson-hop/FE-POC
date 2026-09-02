@@ -7,8 +7,18 @@ const SERVICE_URL = process.env.SERVICE_URL ?? `http://localhost:${process.env.P
 
 // Embed the logo file's mtime in the URL so the wallet fetches a fresh copy
 // whenever the file changes and the service redeploys — no manual version bumps needed.
+// The asset lives at the service root (../../../public from this file: issuer →
+// routes → src → root). A missing/unreadable file must NEVER crash the service on
+// boot: an earlier wrong path (../../public → src/public) made this statSync throw
+// ENOENT at module load, taking down every deploy via the healthcheck. Degrade to a
+// static version instead of throwing.
 const __dir = dirname(fileURLToPath(import.meta.url))
-const logoVersion = statSync(join(__dir, '../../public/immomio-logo-rund.png')).mtimeMs.toString(36)
+let logoVersion = '0'
+try {
+  logoVersion = statSync(join(__dir, '../../../public/immomio-logo-rund.png')).mtimeMs.toString(36)
+} catch (err) {
+  console.warn('[metadata] logo mtime unavailable, using static version:', (err as Error).message)
+}
 const LOGO_URL = `${SERVICE_URL}/immomio-logo-rund.png?v=${logoVersion}`
 
 // GET /.well-known/openid-credential-issuer
