@@ -1,6 +1,7 @@
 import type { Context } from 'hono'
 import { getSessionById, deleteSession } from '../../lib/session.js'
 import { getIssuanceSession, updateIssuanceSession } from '../../lib/issuance-session.js'
+import { matchTenant } from '../../lib/tenant-match.js'
 
 // POST /issuer/link-pid
 // Called by frontend after PID verification completes.
@@ -25,8 +26,19 @@ export async function handleLinkPid(c: Context): Promise<Response> {
     return c.json({ error: 'PID not yet verified' }, 400)
   }
 
+  // Same entitlement check as the auto-link in /callback
+  const tenantMatch = issuanceSession.tenant
+    ? matchTenant(issuanceSession.tenant, vpSession.pidClaims)
+    : undefined
+  if (tenantMatch && !tenantMatch.matched) {
+    updateIssuanceSession(issuanceSessionId, { tenantMatch, status: 'pid_mismatch' })
+    deleteSession(vpSessionId)
+    return c.json({ status: 'pid_mismatch', tenantMatch })
+  }
+
   updateIssuanceSession(issuanceSessionId, {
     pidClaims: vpSession.pidClaims,
+    tenantMatch,
     status: 'pid_verified',
   })
 

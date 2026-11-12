@@ -646,6 +646,22 @@ Frontend pollt diesen Endpoint für den Issuance-Flow-Status.
 | `pid_verified` | `200` | `{ status: "pid_verified", pidClaims: {...} }` | – |
 | `issued` | `200` | `{ status: "issued" }` | Session löschen |
 | `error` | `400` | `{ status: "error", errorMessage: "..." }` | Session löschen |
+| `pid_mismatch` | `200` | `{ status: "pid_mismatch", tenantMatch: {...} }` | Session löschen |
+
+### 4.10 Mieterportal-Flow: Abgleich Mieterkonto ↔ PID
+
+Der Showcase `/mieterportal` nutzt dieselben Endpoints mit zwei optionalen Feldern in `POST /issuer/initiate`:
+
+| Feld | Wirkung |
+|---|---|
+| `tenant: { givenName, familyName, birthdate }` | Das im Portal angemeldete Mieterkonto. Nach der PID-Präsentation vergleicht der Service Vorname, Nachname und Geburtsdatum (`lib/tenant-match.ts`, case-/akzent-insensitiv, zusätzliche Vornamen im PID erlaubt). |
+| `skipTxCode: true` | Offer ohne `tx_code`, `/issuer/token` akzeptiert den Pre-Authorized Code ohne PIN (Same-Device-Flow). |
+
+- **Treffer:** Status `pid_verified`; `/issuer/result` liefert zusätzlich `tenantMatch` und `credentialClaims` (Vorschau der bescheinigten Daten).
+- **Kein Treffer:** Status `pid_mismatch`; PID-Daten werden verworfen, es kann kein Offer erzeugt werden. Zurückgegeben werden nur die Feld-Flags, nie die PID-Daten der fremden Person.
+- Ohne `tenant` verhält sich der Flow wie bisher (`/ausstellen`, kein Abgleich).
+
+> **POC-Vereinfachung:** `tenant` kommt aus dem Browser. Produktiv stammt das Mieterkonto aus der authentifizierten Portal-Session und den Stammdaten des Vermieters.
 
 ---
 
@@ -931,6 +947,7 @@ Adresse kann als verschachteltes Objekt oder als Top-Level Claims ankommen:
 | `/bewerbung/erfolg` | Bewerbung erfolgreich |
 | `/ausstellen` | Credential-Typ-Auswahl (POC 2) |
 | `/ausstellen/[type]` | 3-Step Issuance-Flow |
+| `/mieterportal` | Issuance im Look der Mieter-App: Same-Device, sichtbarer Abgleich Mieterkonto ↔ PID (Demo-Einstellungen über den Avatar) |
 
 ### Wallet-Komponenten – Gemeinsame Patterns
 

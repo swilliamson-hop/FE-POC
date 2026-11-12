@@ -37,7 +37,43 @@ function getX5cCerts(): string[] {
   return [parseCertChain(certChainPem)[0]]
 }
 
-// Mock data for Wohnungsgeberbestätigung
+// What the landlord attests. Mock data standing in for the landlord's contract
+// records – mirrors the demo contract shown in the tenant portal (/mieterportal).
+function wohnungsgeberClaims(pid: PidClaims) {
+  return {
+    given_name: pid.given_name,
+    family_name: pid.family_name,
+    birthdate: pid.birthdate,
+    street_address: 'Zippelhaus 2',
+    postal_code: '20457',
+    locality: 'Hamburg',
+    move_in_date: '2023-01-01',
+    landlord_name: 'Bauverein der Mionauten eG',
+  }
+}
+
+function genossenschaftClaims(pid: PidClaims) {
+  return {
+    given_name: pid.given_name,
+    family_name: pid.family_name,
+    birthdate: pid.birthdate,
+    cooperative_name: 'Bauverein der Mionauten eG',
+    membership_number: 'BVM-2023-04217',
+    member_since: '2023-01-01',
+  }
+}
+
+// The attested claims without the JWT envelope – lets the portal preview
+// exactly what will be issued before the tenant accepts it.
+export function previewCredentialClaims(
+  credentialType: CredentialType,
+  pid: PidClaims,
+): Record<string, string> {
+  return credentialType === 'wohnungsgeberbestaetigung'
+    ? wohnungsgeberClaims(pid)
+    : genossenschaftClaims(pid)
+}
+
 function buildWohnungsgeberPayload(pid: PidClaims, holderJwk?: JWK) {
   const now = Math.floor(Date.now() / 1000)
   return {
@@ -46,18 +82,10 @@ function buildWohnungsgeberPayload(pid: PidClaims, holderJwk?: JWK) {
     iat: now,
     exp: now + 365 * 24 * 3600,
     ...(holderJwk ? { cnf: { jwk: holderJwk } } : {}),
-    given_name: pid.given_name,
-    family_name: pid.family_name,
-    birthdate: pid.birthdate,
-    street_address: 'Musterstraße 42',
-    postal_code: '10115',
-    locality: 'Berlin',
-    move_in_date: '2026-04-01',
-    landlord_name: 'Bauverein der Mionauten eG',
+    ...wohnungsgeberClaims(pid),
   }
 }
 
-// Mock data for Genossenschafts-Mitgliedsbescheinigung
 function buildGenossenschaftPayload(pid: PidClaims, holderJwk?: JWK) {
   const now = Math.floor(Date.now() / 1000)
   return {
@@ -66,12 +94,7 @@ function buildGenossenschaftPayload(pid: PidClaims, holderJwk?: JWK) {
     iat: now,
     exp: now + 365 * 24 * 3600,
     ...(holderJwk ? { cnf: { jwk: holderJwk } } : {}),
-    given_name: pid.given_name,
-    family_name: pid.family_name,
-    birthdate: pid.birthdate,
-    cooperative_name: 'Bauverein der Mionauten eG',
-    membership_number: 'BVM-2026-04217',
-    member_since: '2026-03-15',
+    ...genossenschaftClaims(pid),
   }
 }
 

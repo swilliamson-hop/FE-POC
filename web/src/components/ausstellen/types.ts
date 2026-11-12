@@ -14,10 +14,10 @@ export const CREDENTIAL_CONFIGS: Record<CredentialType, CredentialTypeConfig> = 
     title: 'Wohnungsgeberbestätigung',
     description: 'Bestätigung des Wohnungsgebers für neue Bewohner (Anmeldung)',
     mockClaims: {
-      street_address: 'Musterstraße 42',
-      postal_code: '10115',
-      locality: 'Berlin',
-      move_in_date: '2026-04-01',
+      street_address: 'Zippelhaus 2',
+      postal_code: '20457',
+      locality: 'Hamburg',
+      move_in_date: '2023-01-01',
       landlord_name: 'Bauverein der Mionauten eG',
     },
     mockClaimLabels: {
@@ -34,8 +34,8 @@ export const CREDENTIAL_CONFIGS: Record<CredentialType, CredentialTypeConfig> = 
     description: 'Nachweis der Mitgliedschaft in einer Wohnungsbaugenossenschaft',
     mockClaims: {
       cooperative_name: 'Bauverein der Mionauten eG',
-      membership_number: 'BWG-2026-04217',
-      member_since: '2026-03-15',
+      membership_number: 'BVM-2023-04217',
+      member_since: '2023-01-01',
     },
     mockClaimLabels: {
       cooperative_name: 'Genossenschaft',

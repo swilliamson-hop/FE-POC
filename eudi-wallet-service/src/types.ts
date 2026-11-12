@@ -73,10 +73,29 @@ export interface DcqlClaim {
 
 export type CredentialType = 'wohnungsgeberbestaetigung' | 'genossenschaft-mitglied'
 
+// Tenant the portal user is logged in as (portal flow). In production this
+// comes from the authenticated portal session and the landlord's master data,
+// never from the browser – the POC frontend stands in for the portal backend.
+export interface TenantAccount {
+  givenName: string
+  familyName: string
+  birthdate: string                // ISO YYYY-MM-DD
+}
+
+// Per-field result of comparing the tenant account with the presented PID.
+export interface TenantMatch {
+  givenName: boolean
+  familyName: boolean
+  birthdate: boolean
+  matched: boolean
+}
+
 export interface IssuanceSessionState {
   credentialType: CredentialType
   preAuthorizedCode: string
-  txCode: string                   // 4-digit PIN for wallet tx_code step
+  txCode?: string                  // 4-digit PIN for wallet tx_code step; unset = no PIN
+  tenant?: TenantAccount           // set in the portal flow: PID must match this account
+  tenantMatch?: TenantMatch
   accessToken?: string
   dpopJkt?: string                 // set when the access token is DPoP-bound (RFC 9449)
   cNonce?: string
@@ -85,7 +104,7 @@ export interface IssuanceSessionState {
   holderPublicKeyJwk?: JWK
   createdAt: number
   expiresAt: number
-  status: 'pending_pid' | 'pid_verified' | 'offer_created' | 'issued' | 'error'
+  status: 'pending_pid' | 'pid_verified' | 'pid_mismatch' | 'offer_created' | 'issued' | 'error'
   errorMessage?: string
 }
 
@@ -107,6 +126,8 @@ export interface CredentialOfferObject {
 export interface IssuanceInitiateRequest {
   credentialType: CredentialType
   returnUrl?: string
+  tenant?: TenantAccount           // portal flow: enables the PID <-> tenant match
+  skipTxCode?: boolean             // same-device flow without wallet PIN
 }
 
 export interface IssuanceInitiateResponse {
@@ -118,5 +139,8 @@ export interface IssuanceInitiateResponse {
 export interface IssuanceResultResponse {
   status: IssuanceSessionState['status']
   pidClaims?: PidClaims
+  tenantMatch?: TenantMatch
+  // What the credential will attest (portal flow) – single source of truth for the preview
+  credentialClaims?: Record<string, string>
   errorMessage?: string
 }

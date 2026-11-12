@@ -1,5 +1,6 @@
 import type { Context } from 'hono'
 import { getIssuanceSession, deleteIssuanceSession } from '../../lib/issuance-session.js'
+import { previewCredentialClaims } from '../../lib/credential-builder.js'
 import type { IssuanceResultResponse } from '../../types.js'
 
 // GET /issuer/result/:sessionId
@@ -27,6 +28,21 @@ export function handleIssuanceResult(c: Context): Response {
     return c.json<IssuanceResultResponse>({
       status: session.status,
       pidClaims: session.pidClaims,
+      tenantMatch: session.tenantMatch,
+      credentialClaims:
+        session.tenant && session.pidClaims
+          ? previewCredentialClaims(session.credentialType, session.pidClaims)
+          : undefined,
+    })
+  }
+
+  // Wallet holder is not the logged-in tenant – final. Only the per-field
+  // flags go back, never the stranger's PID data.
+  if (session.status === 'pid_mismatch') {
+    deleteIssuanceSession(sessionId)
+    return c.json<IssuanceResultResponse>({
+      status: session.status,
+      tenantMatch: session.tenantMatch,
     })
   }
 

@@ -48,7 +48,8 @@ export async function handleToken(c: Context): Promise<Response> {
 
   const [sessionId, session] = found
 
-  if (!txCode || txCode !== session.txCode) {
+  // Sessions started without a PIN (skipTxCode) accept the bare pre-authorized code.
+  if (session.txCode && txCode !== session.txCode) {
     console.log(`[Issuer/Token] tx_code mismatch: got=${txCode} expected=${session.txCode}`)
     return c.json({ error: 'invalid_grant', error_description: 'Invalid tx_code' }, 400)
   }

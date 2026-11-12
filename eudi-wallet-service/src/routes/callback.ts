@@ -2,6 +2,7 @@ import type { Context } from 'hono'
 import { getSessionById, updateSession, isSessionExpired } from '../lib/session.js'
 import { getIssuanceSession, updateIssuanceSession } from '../lib/issuance-session.js'
 import { validateVpToken, ValidationError } from '../lib/validator.js'
+import { matchTenant } from '../lib/tenant-match.js'
 
 export async function handleCallback(c: Context): Promise<Response> {
   const sessionId = c.req.param('sessionId')
@@ -53,11 +54,22 @@ export async function handleCallback(c: Context): Promise<Response> {
     if (session.issuanceSessionId) {
       const issuanceSession = getIssuanceSession(session.issuanceSessionId)
       if (issuanceSession && issuanceSession.status === 'pending_pid') {
-        updateIssuanceSession(session.issuanceSessionId, {
-          pidClaims,
-          status: 'pid_verified',
-        })
-        console.log(`[Issuer] PID auto-linked: ${pidClaims.given_name} ${pidClaims.family_name} → issuance ${session.issuanceSessionId}`)
+        // Portal flow: the wallet holder must be the logged-in tenant. On a
+        // mismatch the PID claims are dropped and no offer can be created.
+        const tenantMatch = issuanceSession.tenant
+          ? matchTenant(issuanceSession.tenant, pidClaims)
+          : undefined
+        if (tenantMatch && !tenantMatch.matched) {
+          updateIssuanceSession(session.issuanceSessionId, { tenantMatch, status: 'pid_mismatch' })
+          console.log(`[Issuer] PID does not match tenant account → issuance ${session.issuanceSessionId} refused (given=${tenantMatch.givenName} family=${tenantMatch.familyName} birthdate=${tenantMatch.birthdate})`)
+        } else {
+          updateIssuanceSession(session.issuanceSessionId, {
+            pidClaims,
+            tenantMatch,
+            status: 'pid_verified',
+          })
+          console.log(`[Issuer] PID auto-linked: ${pidClaims.given_name} ${pidClaims.family_name} → issuance ${session.issuanceSessionId}`)
+        }
       }
     }
 

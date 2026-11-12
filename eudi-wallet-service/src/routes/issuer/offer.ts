@@ -20,7 +20,7 @@ export async function handleCreateOffer(c: Context): Promise<Response> {
   const credentialOfferUri = `${SERVICE_URL}/issuer/offer/${sessionId}`
   const walletUrl = `openid-credential-offer://?credential_offer_uri=${encodeURIComponent(credentialOfferUri)}`
 
-  console.log(`[Issuer] Offer created for session ${sessionId}: ${walletUrl} (txCode=${session.txCode})`)
+  console.log(`[Issuer] Offer created for session ${sessionId}: ${walletUrl} (txCode=${session.txCode ?? 'none'})`)
 
   return c.json({ sessionId, credentialOfferUri, walletUrl, txCode: session.txCode })
 }
@@ -46,11 +46,16 @@ export function handleGetOffer(c: Context): Response {
         // to detect that a PIN is required. Without this object, the wallet
         // calls /token without any PIN and gets 'Invalid tx_code' rejection.
         // user_pin_required (old draft) is ignored by this wallet version.
-        tx_code: {
-          input_mode: 'numeric',
-          length: 4,
-          description: 'PIN aus der Immomio-App eingeben',
-        },
+        // Omitted entirely when the session was started without a PIN.
+        ...(session.txCode
+          ? {
+              tx_code: {
+                input_mode: 'numeric',
+                length: 4,
+                description: 'PIN aus der Immomio-App eingeben',
+              },
+            }
+          : {}),
       },
     },
   }
