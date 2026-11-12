@@ -2,6 +2,8 @@ import type { Context } from 'hono'
 import { statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { SignJWT } from 'jose'
+import { getPrivateKey, parseCertChain } from '../../lib/jar.js'
 
 const SERVICE_URL = process.env.SERVICE_URL ?? `http://localhost:${process.env.PORT ?? 3001}`
 
@@ -21,13 +23,55 @@ try {
 }
 const LOGO_URL = `${SERVICE_URL}/immomio-logo-rund.png?v=${logoVersion}`
 
+// Issuer WRP Registration Certificate (rc-wrp+jwt) from the EUDI Hub. Must cover
+// ALL vcts in credential_configurations_supported: the wallet accepts exactly one
+// registration_cert entry in issuer_info and checks it against every offered config.
+function getIssuerRegistrationCert(): string | undefined {
+  return process.env.ISSUER_REGISTRATION_CERT?.trim() || undefined
+}
+
 // GET /.well-known/openid-credential-issuer
 // Follows BMI EAA Developer Guide template exactly:
 // https://bmi.usercontent.opencode.de/eudi-wallet/developer-guide/eaa/EAA_Issuance/
-export function handleIssuerMetadata(c: Context): Response {
+//
+// Content negotiation (eudi-lib-ios-openid4vci-swift MetadataFetcher/Processor):
+// when the wallet enforces a WRPRC policy it requests `Accept: application/jwt`
+// and REQUIRES signed metadata — the WRPAC is taken from the JWS x5c leaf and the
+// WRPRC from `issuer_info`. Signed metadata is only served when
+// ISSUER_REGISTRATION_CERT is set; otherwise behaviour is unchanged (plain JSON).
+export async function handleIssuerMetadata(c: Context): Promise<Response> {
   c.header('Cache-Control', 'no-store')
-  return c.json({
+  const metadata = buildIssuerMetadata()
+  const wantsJwt = (c.req.header('Accept') ?? '').toLowerCase().includes('application/jwt')
+  if (wantsJwt && getIssuerRegistrationCert()) {
+    const jws = await signIssuerMetadata(metadata)
+    return c.body(jws, 200, { 'Content-Type': 'application/jwt' })
+  }
+  return c.json(metadata)
+}
+
+// Signed metadata per OpenID4VCI §11.2.3: typ openidvci-issuer-metadata+jwt,
+// x5c = access certificate leaf, sub = credential_issuer (checked by wallet), iat required.
+async function signIssuerMetadata(metadata: Record<string, unknown>): Promise<string> {
+  const now = Math.floor(Date.now() / 1000)
+  return new SignJWT({ ...metadata, sub: SERVICE_URL, iss: SERVICE_URL })
+    .setProtectedHeader({ alg: 'ES256', typ: 'openidvci-issuer-metadata+jwt', x5c: [getLeafCert()] })
+    .setIssuedAt(now)
+    .setExpirationTime(now + 24 * 60 * 60)
+    .sign(await getPrivateKey())
+}
+
+function getLeafCert(): string {
+  return parseCertChain(process.env.CERT_CHAIN!.replace(/\\n/g, '\n'))[0]
+}
+
+function buildIssuerMetadata(): Record<string, unknown> {
+  const issuerRegistrationCert = getIssuerRegistrationCert()
+  return {
     credential_issuer: SERVICE_URL,
+    ...(issuerRegistrationCert && {
+      issuer_info: [{ format: 'registration_cert', data: issuerRegistrationCert }],
+    }),
     credential_endpoint: `${SERVICE_URL}/issuer/credential`,
     token_endpoint: `${SERVICE_URL}/issuer/token`,
     // HAIP-required: wallet fetches a fresh c_nonce here before building the proof JWT
@@ -154,7 +198,7 @@ export function handleIssuerMetadata(c: Context): Response {
         locale: 'en-US',
       },
     ],
-  })
+  }
 }
 
 // GET /.well-known/oauth-authorization-server
