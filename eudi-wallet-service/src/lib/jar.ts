@@ -140,13 +140,18 @@ export async function createSignedJar(params: JarParams): Promise<string> {
     // typ rc-wrp+jwt) issued by the Sandbox Registrar. The wallet enforces a
     // WRPRC policy since Nov 2026 and rejects requests without it
     // ("WRPRC policy is configured but verifier_info is missing").
-    // Shape per sandbox guide "Registrar Certificate Usage". `data` is the raw
-    // compact JWT — NOT base64url-wrapped: the iOS wallet kit does not decode
-    // it (eudi-lib-ios-wallet-kit#521).
-    verifier_info: {
-      format: 'registration_cert',
-      data: getRegistrationCert(),
-    },
+    // MUST be an array (OpenID4VP 1.0): the iOS lib decodes it via
+    // `try? decode([JSON].self)`, so a bare object (as shown in the sandbox
+    // guide) silently becomes nil -> "verifier_info is missing".
+    // See eudi-lib-ios-openid4vp-swift UnvalidatedRequestObject.swift.
+    // `data` is the raw compact JWT — NOT base64url-wrapped: the iOS wallet kit
+    // does not decode it (eudi-lib-ios-wallet-kit#521).
+    verifier_info: [
+      {
+        format: 'registration_cert',
+        data: getRegistrationCert(),
+      },
+    ],
     client_metadata: {
       jwks: {
         keys: [ephemeralPublicKeyJwk],
