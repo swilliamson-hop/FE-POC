@@ -3,15 +3,19 @@ import type { Context } from 'hono'
 import type { JWK } from 'jose'
 import { findSessionByAccessToken, updateIssuanceSession } from '../../lib/issuance-session.js'
 import { createCredential } from '../../lib/credential-builder.js'
+import { verifyDpopProof } from '../../lib/dpop.js'
+
+const SERVICE_URL = process.env.SERVICE_URL ?? `http://localhost:${process.env.PORT ?? 3001}`
 
 // POST /issuer/credential
 // Wallet sends proof-of-possession JWT, receives SD-JWT-VC credential.
 export async function handleCredential(c: Context): Promise<Response> {
   const authHeader = c.req.header('authorization') ?? ''
-  if (!authHeader.startsWith('Bearer ')) {
+  const scheme = authHeader.split(' ')[0]
+  if (scheme !== 'Bearer' && scheme !== 'DPoP') {
     return c.json({ error: 'invalid_token' }, 401)
   }
-  const accessToken = authHeader.slice(7)
+  const accessToken = authHeader.slice(scheme.length + 1)
 
   const found = findSessionByAccessToken(accessToken)
   if (!found) {
@@ -19,6 +23,22 @@ export async function handleCredential(c: Context): Promise<Response> {
   }
 
   const [sessionId, session] = found
+
+  // A DPoP-bound token must be presented with the DPoP scheme and a proof from the
+  // same key (RFC 9449 §7); a Bearer token must not be upgraded/downgraded.
+  if (session.dpopJkt || scheme === 'DPoP') {
+    const proof = c.req.header('dpop')
+    if (scheme !== 'DPoP' || !session.dpopJkt || !proof) {
+      return c.json({ error: 'invalid_token', error_description: 'DPoP-bound token required' }, 401)
+    }
+    try {
+      const jkt = await verifyDpopProof({ proof, htm: 'POST', htu: `${SERVICE_URL}/issuer/credential`, accessToken })
+      if (jkt !== session.dpopJkt) throw new Error('DPoP key does not match token binding')
+    } catch (e) {
+      console.log(`[Issuer/Credential] invalid DPoP proof: ${(e as Error).message}`)
+      return c.json({ error: 'invalid_dpop_proof', error_description: (e as Error).message }, 401)
+    }
+  }
 
   if (!session.pidClaims) {
     return c.json({ error: 'invalid_request', error_description: 'PID not verified' }, 400)

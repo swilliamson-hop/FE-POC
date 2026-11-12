@@ -78,6 +78,7 @@ export interface IssuanceSessionState {
   preAuthorizedCode: string
   txCode: string                   // 4-digit PIN for wallet tx_code step
   accessToken?: string
+  dpopJkt?: string                 // set when the access token is DPoP-bound (RFC 9449)
   cNonce?: string
   cNonceExpiresAt?: number
   pidClaims?: PidClaims

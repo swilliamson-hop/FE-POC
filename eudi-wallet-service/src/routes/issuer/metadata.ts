@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { SignJWT } from 'jose'
 import { getPrivateKey, parseCertChain } from '../../lib/jar.js'
+import { DPOP_ALGS } from '../../lib/dpop.js'
 
 const SERVICE_URL = process.env.SERVICE_URL ?? `http://localhost:${process.env.PORT ?? 3001}`
 
@@ -213,6 +214,9 @@ export function handleAuthServerMetadata(c: Context): Response {
     authorization_endpoint: `${SERVICE_URL}/issuer/authorize`,
     token_endpoint: `${SERVICE_URL}/issuer/token`,
     response_types_supported: ['code'],
+    // Required by the SPRIND wallet (requireDpop): without it the wallet aborts
+    // issuance with "dpopRequired" before calling the token endpoint.
+    dpop_signing_alg_values_supported: DPOP_ALGS,
     grant_types_supported: [
       'urn:ietf:params:oauth:grant-type:pre-authorized_code',
     ],

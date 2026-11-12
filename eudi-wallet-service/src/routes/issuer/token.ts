@@ -1,6 +1,9 @@
 import { randomBytes } from 'node:crypto'
 import type { Context } from 'hono'
 import { findSessionByPreAuthCode, updateIssuanceSession } from '../../lib/issuance-session.js'
+import { verifyDpopProof } from '../../lib/dpop.js'
+
+const SERVICE_URL = process.env.SERVICE_URL ?? `http://localhost:${process.env.PORT ?? 3001}`
 
 // POST /issuer/token
 // Wallet exchanges pre-authorized code for access token + c_nonce.
@@ -50,21 +53,35 @@ export async function handleToken(c: Context): Promise<Response> {
     return c.json({ error: 'invalid_grant', error_description: 'Invalid tx_code' }, 400)
   }
 
+  // DPoP-bind the token when the wallet sends a proof (SPRIND wallet requires it).
+  // No proof -> Bearer, as before.
+  let dpopJkt: string | undefined
+  const dpopProof = c.req.header('dpop')
+  if (dpopProof) {
+    try {
+      dpopJkt = await verifyDpopProof({ proof: dpopProof, htm: 'POST', htu: `${SERVICE_URL}/issuer/token` })
+    } catch (e) {
+      console.log(`[Issuer/Token] invalid DPoP proof: ${(e as Error).message}`)
+      return c.json({ error: 'invalid_dpop_proof', error_description: (e as Error).message }, 400)
+    }
+  }
+
   const accessToken = randomBytes(32).toString('base64url')
   const cNonce = randomBytes(16).toString('base64url')
   const cNonceExpiresIn = 300
 
   updateIssuanceSession(sessionId, {
     accessToken,
+    dpopJkt,
     cNonce,
     cNonceExpiresAt: Date.now() + cNonceExpiresIn * 1000,
   })
 
-  console.log(`[Issuer/Token] Token issued for session ${sessionId}`)
+  console.log(`[Issuer/Token] ${dpopJkt ? 'DPoP' : 'Bearer'} token issued for session ${sessionId}`)
 
   return c.json({
     access_token: accessToken,
-    token_type: 'Bearer',
+    token_type: dpopJkt ? 'DPoP' : 'Bearer',
     expires_in: 600,
     c_nonce: cNonce,
     c_nonce_expires_in: cNonceExpiresIn,
