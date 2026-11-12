@@ -136,14 +136,12 @@ export function EudiWalletButton({ onPidReceived }: Props) {
             Zurücksetzen
           </button>
         </div>
-        <div className="mt-2 border-t border-green-200 pt-2 text-xs">
-          <span className="font-medium">Persistente Personen-ID:</span>{' '}
-          {personalId ? (
+        {personalId && (
+          <div className="mt-2 border-t border-green-200 pt-2 text-xs">
+            <span className="font-medium">Persistente Personen-ID:</span>{' '}
             <span className="font-mono break-all">{personalId}</span>
-          ) : (
-            <span className="italic text-green-700/70">nicht im PID enthalten</span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     )
   }
