@@ -109,7 +109,7 @@ app.use('*', async (c, next) => {
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
 
-// Immomio logo – referenced by verifier_info.logo_uri so wallets can render it
+// Immomio logo (formerly referenced by verifier_info.logo_uri; kept for existing links)
 // on the consent screen. Loaded once at startup.
 const logoBuffer = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'immomio-logo-rund.png')

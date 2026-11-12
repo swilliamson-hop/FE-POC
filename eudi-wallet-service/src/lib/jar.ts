@@ -37,6 +37,13 @@ export async function getPrivateKey(): Promise<CryptoKey> {
   return _privateKey
 }
 
+// Registration Certificate JWT from the Sandbox Registrar (see verifier_info below)
+export function getRegistrationCert(): string {
+  const jwt = process.env.REGISTRATION_CERT?.trim()
+  if (!jwt) throw new Error('REGISTRATION_CERT is not set (rc-wrp+jwt from Sandbox Registrar)')
+  return jwt
+}
+
 // Build the DCQL query for PID presentation
 // Only request dc+sd-jwt (not mso_mdoc) to avoid ISO 18013-5 reader auth,
 // which requires the German Registrar root CA to be in the iOS system trust store.
@@ -129,13 +136,16 @@ export async function createSignedJar(params: JarParams): Promise<string> {
     state: sessionId,
     response_uri: responseUri,
     dcql_query: buildDcqlQuery(),
-    // Identifies the Relying Party in the wallet's consent screen.
-    // Required by EUDI-ARF Section 3.2 (PID Presentation profile) so the user
-    // sees "Immomio is requesting your data" instead of just a hash/URL.
-    // Verified as a recommended improvement by ERICA on 2026-05-05.
+    // Wallet-Relying-Party Registration Certificate (WRPRC, ETSI TS 119 475,
+    // typ rc-wrp+jwt) issued by the Sandbox Registrar. The wallet enforces a
+    // WRPRC policy since Nov 2026 and rejects requests without it
+    // ("WRPRC policy is configured but verifier_info is missing").
+    // Shape per sandbox guide "Registrar Certificate Usage". `data` is the raw
+    // compact JWT — NOT base64url-wrapped: the iOS wallet kit does not decode
+    // it (eudi-lib-ios-wallet-kit#521).
     verifier_info: {
-      name: 'Immomio',
-      logo_uri: `${SERVICE_URL}/logo.png`,
+      format: 'registration_cert',
+      data: getRegistrationCert(),
     },
     client_metadata: {
       jwks: {
