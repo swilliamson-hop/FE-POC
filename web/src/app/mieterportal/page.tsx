@@ -17,21 +17,33 @@ import { CredentialFlowSheet, loadStoredFlow, type FlowState } from '@/component
 import { DemoSettingsSheet } from '@/components/mieterportal/DemoSettingsSheet'
 import { CONTRACT, CREDENTIALS, formatDate, formatEuro, type CredentialType } from '@/components/mieterportal/data'
 import { saveSettings, useDemoSettings } from '@/components/mieterportal/demo-settings'
+import { StartScreen } from '@/components/mieterportal/StartScreen'
 
 // Tenant-portal showcase for credential issuance: the logged-in tenant pulls a
-// landlord-attested credential into their EUDI wallet. Styled after the native
-// Mieter-App ("Zuhause" tab) and built phone-first for the same-device flow.
+// landlord-attested credential into their d-you wallet. Styled after the native
+// Mieter-App and built phone-first for the same-device flow. The demo opens on
+// the app's start screen; the issuance lives under the "Zuhause" tab.
 export default function MieterportalPage() {
   const settings = useDemoSettings()
   const [active, setActive] = useState<{ type: CredentialType; resume?: FlowState } | null>(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [tab, setTab] = useState<'start' | 'zuhause'>('start')
+
+  function switchTab(next: 'start' | 'zuhause') {
+    setTab(next)
+    window.scrollTo(0, 0)
+  }
 
   // Coming back from the wallet app the browser may have reloaded the tab –
   // pick the running issuance up where it was.
   useEffect(() => {
     const stored = loadStoredFlow()
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from sessionStorage after hydration
-    if (stored) setActive({ type: stored.type, resume: stored })
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from sessionStorage after hydration */
+    if (stored) {
+      setActive({ type: stored.type, resume: stored })
+      setTab('zuhause')
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
 
   const handleIssued = useCallback(
@@ -48,6 +60,16 @@ export default function MieterportalPage() {
   return (
     <div className="min-h-dvh bg-[#dfe5f3] text-[#151f5e]">
       <div className="relative mx-auto flex min-h-dvh max-w-[430px] flex-col bg-[#f4f7fe] shadow-xl">
+        {tab === 'start' && (
+          <StartScreen
+            name={`${account.givenName} ${account.familyName}`}
+            initials={initials}
+            onAvatarClick={() => setShowSettings(true)}
+          />
+        )}
+
+        {tab === 'zuhause' && (
+        <>
         {/* App header */}
         <header className="sticky top-0 z-20 bg-white shadow-[0_2px_6px_rgba(20,36,110,0.12)]">
           <div className="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))]">
@@ -117,7 +139,7 @@ export default function MieterportalPage() {
               <span className="rounded-full bg-[#d9822f] px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide">Neu</span>
             </div>
             <p className="px-5 pt-3 text-[15px] leading-snug text-slate-600">
-              Von Ihrem Vermieter bestätigt, direkt in Ihre EUDI Wallet – ohne Papier, ohne Wartezeit.
+              Von Ihrem Vermieter bestätigt, direkt in Ihre d-you Wallet – ohne Papier, ohne Wartezeit.
             </p>
             <ul className="mt-1 divide-y divide-slate-100">
               {Object.values(CREDENTIALS).map((cred) => {
@@ -176,27 +198,46 @@ export default function MieterportalPage() {
             <ChevronDown size={22} />
           </div>
         </main>
+        </>
+        )}
 
         {/* Tab bar */}
         <nav
           aria-label="Hauptnavigation"
           className="fixed inset-x-0 bottom-0 z-20 mx-auto grid max-w-[430px] grid-cols-4 rounded-t-3xl bg-[#14246e] px-2 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-white"
         >
-          {[
-            { label: 'Start', icon: Gauge },
-            { label: 'News', icon: Newspaper },
-            { label: 'Anliegen', icon: MessageSquare },
-            { label: 'Zuhause', icon: Home, current: true },
-          ].map(({ label, icon: Icon, current }) => (
-            <span
-              key={label}
-              aria-current={current ? 'page' : undefined}
-              className={`flex flex-col items-center gap-1 rounded-2xl py-2 text-xs font-medium uppercase tracking-wider ${current ? 'bg-white/15 text-[#f0a35a]' : ''}`}
-            >
-              <Icon size={24} />
-              {label}
-            </span>
-          ))}
+          {(
+            [
+              { label: 'Start', icon: Gauge, target: 'start' },
+              { label: 'News', icon: Newspaper },
+              { label: 'Anliegen', icon: MessageSquare, dot: true },
+              { label: 'Zuhause', icon: Home, target: 'zuhause', dot: true },
+            ] as const
+          ).map((item) => {
+            const Icon = item.icon
+            const target = 'target' in item ? item.target : undefined
+            const current = target === tab
+            const dot = 'dot' in item && item.dot
+            const className = `flex flex-col items-center gap-1 rounded-2xl py-2 text-xs font-medium uppercase tracking-wider ${current ? 'bg-white/15 text-[#f0a35a]' : ''}`
+            const content = (
+              <>
+                <span className="relative">
+                  <Icon size={24} />
+                  {dot && <span className="absolute h-2 w-2 rounded-full bg-red-600" style={{ top: -2, right: -4 }} />}
+                </span>
+                {item.label}
+              </>
+            )
+            return target ? (
+              <button key={item.label} onClick={() => switchTab(target)} aria-current={current ? 'page' : undefined} className={className}>
+                {content}
+              </button>
+            ) : (
+              <span key={item.label} className={className}>
+                {content}
+              </span>
+            )
+          })}
         </nav>
       </div>
 

@@ -73,9 +73,9 @@ export function StepDocuments({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Dokumente</h2>
+        <h2 className="text-xl font-bold text-gray-900">Dokumente</h2>
       </div>
 
       {error && (
@@ -127,7 +127,7 @@ export function StepDocuments({
         )}
       </div>
 
-      <div className="flex gap-4 pt-4">
+      <div className="flex gap-3 pt-2">
         <Button variant="outline" onClick={onBack} disabled={isSubmitting}>
           Zurück
         </Button>

@@ -157,7 +157,7 @@ export function IssuanceWalletButton({ issuanceSessionId, onIssued }: Props) {
   return (
     <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
       <p className="mb-3 text-sm font-medium text-blue-900">
-        QR-Code mit EU Digital Identity Wallet scannen um das Credential zu empfangen
+        QR-Code mit d-you Wallet scannen um das Credential zu empfangen
       </p>
       <div className="flex justify-center">
         <div className="rounded-lg bg-white p-3 shadow-sm">

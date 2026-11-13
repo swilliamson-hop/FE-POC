@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useContext } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import { CompactContext } from '@/components/ui/density'
+import { titleCaseFromCaps } from '@/lib/pid'
 import type { PidClaims } from './types'
 
 const EUDI_SERVICE_URL = process.env.NEXT_PUBLIC_EUDI_SERVICE_URL ?? 'http://localhost:3001'
@@ -107,7 +109,7 @@ export function EudiWalletButton({ onPidReceived }: Props) {
         startPolling(data.sessionId, data.walletUrl, false)
       }
     } catch {
-      setFlow({ status: 'error', message: 'EUDI Wallet Service nicht erreichbar.' })
+      setFlow({ status: 'error', message: 'Wallet-Service nicht erreichbar.' })
     }
   }
 
@@ -123,27 +125,7 @@ export function EudiWalletButton({ onPidReceived }: Props) {
   }
 
   if (flow.status === 'success') {
-    const personalId = flow.pidClaims.personal_administrative_number
-    return (
-      <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
-        <div className="flex items-center gap-2">
-          <span className="text-green-600 font-semibold">✓</span>
-          <span>Daten aus EU Digital Identity Wallet übernommen</span>
-          <button
-            onClick={handleReset}
-            className="ml-auto text-xs text-green-600 underline hover:no-underline"
-          >
-            Zurücksetzen
-          </button>
-        </div>
-        {personalId && (
-          <div className="mt-2 border-t border-green-200 pt-2 text-xs">
-            <span className="font-medium">Persistente Personen-ID:</span>{' '}
-            <span className="font-mono break-all">{personalId}</span>
-          </div>
-        )}
-      </div>
-    )
+    return <PidReceivedCard claims={flow.pidClaims} onReset={handleReset} />
   }
 
   if (flow.status === 'error') {
@@ -162,21 +144,14 @@ export function EudiWalletButton({ onPidReceived }: Props) {
 
   if (flow.status === 'idle') {
     return (
-      <div className="flex flex-col items-center gap-3">
+      <button
+        onClick={handleStart}
+        className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-blue-600 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="https://interoperable-europe.ec.europa.eu/sites/default/files/news/logo/2024-03/Logo%20-%20EUDIW.png"
-          alt="EU Digital Identity Wallet"
-          className="h-16 w-auto"
-        />
-        <button
-          onClick={handleStart}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-blue-600 bg-white px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
-        >
-          <WalletIcon />
-          Mit EU Digital Identity Wallet ausfüllen
-        </button>
-      </div>
+        <img src="/d-you-icon.png" alt="" className="h-11 w-11 mix-blend-multiply" />
+        Mit d-you Wallet ausfüllen
+      </button>
     )
   }
 
@@ -184,7 +159,7 @@ export function EudiWalletButton({ onPidReceived }: Props) {
     return (
       <div className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-600">
         <span className="animate-spin">⟳</span>
-        Verbinde mit EUDI Wallet...
+        Verbinde mit d-you Wallet...
       </div>
     )
   }
@@ -196,7 +171,7 @@ export function EudiWalletButton({ onPidReceived }: Props) {
   if (currentFlow.isMobile) {
     return (
       <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4 text-sm">
-        <p className="mb-3 font-medium text-blue-900">EUDI Wallet öffnen und Daten freigeben</p>
+        <p className="mb-3 font-medium text-blue-900">d-you Wallet öffnen und Daten freigeben</p>
         {isPolling ? (
           <div className="flex items-center gap-2 text-blue-700">
             <span className="animate-spin inline-block">⟳</span>
@@ -221,7 +196,7 @@ export function EudiWalletButton({ onPidReceived }: Props) {
   return (
     <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
       <p className="mb-3 text-sm font-medium text-blue-900">
-        QR-Code mit EU Digital Identity Wallet scannen
+        QR-Code mit d-you Wallet scannen
       </p>
       <div className="flex justify-center">
         <div className="rounded-lg bg-white p-3 shadow-sm">
@@ -239,19 +214,79 @@ export function EudiWalletButton({ onPidReceived }: Props) {
   )
 }
 
-function WalletIcon() {
+// Shown once the wallet has released the PID: every value that was taken over
+// into the application appears one after another with a green check.
+function PidReceivedCard({ claims, onReset }: { claims: PidClaims; onReset: () => void }) {
+  const birthdate = claims.birthdate?.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  const rows = [
+    { label: 'Vorname', value: titleCaseFromCaps(claims.given_name) },
+    { label: 'Nachname', value: titleCaseFromCaps(claims.family_name) },
+    { label: 'Geburtsdatum', value: birthdate ? `${birthdate[3]}.${birthdate[2]}.${birthdate[1]}` : claims.birthdate },
+    { label: 'Straße', value: titleCaseFromCaps(claims.street_address) },
+    { label: 'PLZ', value: claims.postal_code },
+    { label: 'Ort', value: titleCaseFromCaps(claims.locality) },
+  ].filter((row) => row.value)
+  const personalId = claims.personal_administrative_number
+  const compact = useContext(CompactContext)
+  const doneDelay = 0.3 + rows.length * 0.3
+
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="5" width="20" height="14" rx="2" />
-      <path d="M16 12h2" />
-      <path d="M2 9h20" />
-    </svg>
+    <div className="overflow-hidden rounded-xl border border-green-200 bg-white" role="status">
+      <div className="flex items-center gap-2 bg-green-50 px-4 py-2.5 text-sm text-green-800">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-green-600">
+          <rect x="2" y="5" width="20" height="14" rx="2" />
+          <path d="M16 12h2" />
+          <path d="M2 9h20" />
+        </svg>
+        <span className="font-semibold">Aus Ihrer d-you Wallet übernommen</span>
+        <button onClick={onReset} className="ml-auto text-xs text-green-700 underline hover:no-underline">
+          Zurücksetzen
+        </button>
+      </div>
+
+      <ul>
+        {rows.map((row, i) => (
+          <li
+            key={row.label}
+            className={`mp-rise flex items-center gap-3 border-t border-gray-100 px-4 ${compact ? 'py-1.5' : 'py-2'}`}
+            style={{ animationDelay: `${0.15 + i * 0.3}s` }}
+          >
+            <div className={`min-w-0 flex-1 ${compact ? 'flex items-baseline justify-between gap-3' : ''}`}>
+              <p className="shrink-0 text-xs text-gray-500">{row.label}</p>
+              <p className={`text-sm font-medium text-gray-900 [overflow-wrap:anywhere] ${compact ? 'text-right' : ''}`}>{row.value}</p>
+            </div>
+            <span
+              className="mp-pop flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500 text-white"
+              style={{ animationDelay: `${0.35 + i * 0.3}s` }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <p
+        className="mp-rise border-t border-gray-100 bg-gray-50 px-4 py-2.5 text-xs text-gray-600"
+        style={{ animationDelay: `${doneDelay}s` }}
+      >
+        Staatlich bestätigte Angaben – wir haben sie für Sie in die Bewerbung eingetragen.
+      </p>
+
+      {personalId && (
+        <div className="border-t border-gray-100 px-4 py-2 text-xs text-gray-600">
+          <span className="font-medium">Persistente Personen-ID:</span>{' '}
+          <span className="font-mono break-all">{personalId}</span>
+        </div>
+      )}
+    </div>
   )
 }
 
 export function VerifiedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+    <span className="mp-pop inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
         <polyline points="20 6 9 17 4 12" />
       </svg>

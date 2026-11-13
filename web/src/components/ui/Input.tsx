@@ -1,6 +1,7 @@
 'use client';
 
 import { InputHTMLAttributes, forwardRef, useState } from 'react';
+import { useFieldPadding } from './density';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: React.ReactNode;
@@ -11,6 +12,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, icon, className = '', onFocus, onBlur, value, ...props }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
+    const fieldPadding = useFieldPadding();
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       setIsFocused(true);
@@ -25,7 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={className}>
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
             {label}
             {props.required && <span className="text-red-500 ml-1">*</span>}
           </label>
@@ -47,7 +49,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             onFocus={handleFocus}
             onBlur={handleBlur}
             className={`
-              w-full px-4 py-4 bg-transparent outline-none text-gray-900
+              w-full px-4 ${fieldPadding} bg-transparent outline-none text-gray-900
               ${icon ? 'pl-12' : ''}
             `}
             placeholder={props.placeholder}

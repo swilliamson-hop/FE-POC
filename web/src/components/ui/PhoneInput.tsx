@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, forwardRef } from 'react';
+import { useFieldPadding } from './density';
 
 interface PhoneInputProps {
   value: string;
@@ -18,6 +19,7 @@ const COUNTRY_CODES = [
 export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
   ({ value, onChange, error, required }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
+    const fieldPadding = useFieldPadding();
     const [countryCode, setCountryCode] = useState('+49');
     const [showDropdown, setShowDropdown] = useState(false);
 
@@ -61,7 +63,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
           <button
             type="button"
             onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center gap-2 px-3 py-4 bg-gray-50 border-r border-gray-300 hover:bg-gray-100"
+            className={`flex items-center gap-2 px-3 ${fieldPadding} bg-gray-50 border-r border-gray-300 hover:bg-gray-100`}
           >
             <span className="text-xl">{selectedCountry?.flag}</span>
             <span className="text-sm text-gray-600">{countryCode}</span>
@@ -74,7 +76,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="z.B. 0151 23456789"
-            className="flex-1 px-4 py-4 outline-none text-gray-900"
+            className={`flex-1 min-w-0 px-4 ${fieldPadding} outline-none text-gray-900`}
           />
         </div>
 

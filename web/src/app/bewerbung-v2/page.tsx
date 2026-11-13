@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { CompactContext } from '@/components/ui/density';
 import { StepEmail } from '@/components/bewerbung/StepEmail';
 import { StepPersonalAndContact } from '@/components/bewerbung-v2/StepPersonalAndContact';
 import { StepHousehold } from '@/components/bewerbung-v2/StepHousehold';
@@ -147,8 +148,8 @@ function BewerbungV2Content() {
   return (
     <div className="min-h-screen bg-page">
       <div className="sticky top-0 bg-page border-b border-gray-200 z-40">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="max-w-lg mx-auto px-4 py-3">
+          <div className="flex items-center justify-between mb-3">
             <h1 className="font-semibold text-gray-900">Bewerbung erfassen</h1>
             <button
               onClick={() => {
@@ -166,7 +167,8 @@ function BewerbungV2Content() {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <CompactContext value={true}>
+      <div className="max-w-lg mx-auto px-4 py-4">
         {currentStep === 1 && (
           <StepEmail
             email={formState.email}
@@ -251,6 +253,7 @@ function BewerbungV2Content() {
           />
         )}
       </div>
+      </CompactContext>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { ChevronDown, ChevronLeft } from 'lucide-react';
+import { useFieldPadding } from './density';
 
 interface SelectOption {
   value: string;
@@ -30,6 +31,7 @@ export function Select({
   disabled,
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const fieldPadding = useFieldPadding();
   const ref = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
@@ -48,7 +50,7 @@ export function Select({
   return (
     <div ref={ref} className="relative">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -58,7 +60,7 @@ export function Select({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`
-          w-full px-4 py-4 text-left border-2 rounded-xl transition-all duration-200
+          w-full px-4 ${fieldPadding} text-left border-2 rounded-xl transition-all duration-200
           flex items-center justify-between
           ${isOpen ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-300'}
           ${error ? 'border-red-500' : ''}

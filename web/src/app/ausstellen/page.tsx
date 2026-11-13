@@ -15,7 +15,7 @@ export default function AusstellenPage() {
             Credential ausstellen
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Wählen Sie den Nachweis, der in Ihre EUDI Wallet ausgestellt werden soll.
+            Wählen Sie den Nachweis, der in Ihre d-you Wallet ausgestellt werden soll.
             Ihre Identität wird zuerst über Ihr PID verifiziert.
           </p>
         </div>

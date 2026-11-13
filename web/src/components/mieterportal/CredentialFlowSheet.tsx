@@ -230,7 +230,7 @@ export function CredentialFlowSheet({ type, settings, resume, onClose, onIssued 
             {(phase === 'intro' || phase === 'starting') && (
               <>
                 <p className="text-[15px] leading-snug text-slate-600">
-                  Zeigen Sie mit dem digitalen Ausweis in Ihrer EUDI Wallet, wer Sie sind. So landet der
+                  Zeigen Sie mit dem digitalen Ausweis in Ihrer d-you Wallet, wer Sie sind. So landet der
                   Nachweis sicher bei der richtigen Person.
                 </p>
                 <button
@@ -239,7 +239,7 @@ export function CredentialFlowSheet({ type, settings, resume, onClose, onIssued 
                   className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#14246e] py-3.5 text-base font-semibold text-white active:opacity-90 disabled:opacity-70"
                 >
                   {phase === 'starting' ? <Loader2 size={20} className="animate-spin" /> : <Wallet size={20} />}
-                  Mit EUDI Wallet fortfahren
+                  Mit d-you Wallet fortfahren
                 </button>
               </>
             )}
@@ -249,7 +249,7 @@ export function CredentialFlowSheet({ type, settings, resume, onClose, onIssued 
                 sameDevice={flow.sameDevice}
                 simulated={flow.simulated}
                 label="Warte auf Ihre Freigabe in der Wallet …"
-                qrHint="QR-Code mit der EUDI Wallet scannen und Ausweisdaten freigeben"
+                qrHint="QR-Code mit der d-you Wallet scannen und Ausweisdaten freigeben"
               />
             )}
           </Step>
@@ -327,7 +327,7 @@ export function CredentialFlowSheet({ type, settings, resume, onClose, onIssued 
                       sameDevice={flow.sameDevice}
                       simulated={flow.simulated}
                       label="Warte auf die Annahme in der Wallet …"
-                      qrHint="QR-Code mit der EUDI Wallet scannen, um den Nachweis zu empfangen"
+                      qrHint="QR-Code mit der d-you Wallet scannen, um den Nachweis zu empfangen"
                     />
                   </div>
                 )}

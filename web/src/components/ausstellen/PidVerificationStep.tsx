@@ -87,7 +87,7 @@ export function PidVerificationStep({ credentialType, onPidVerified }: Props) {
       }
       startPolling(data.sessionId, data.walletUrl, mobile)
     } catch {
-      setFlow({ status: 'error', message: 'EUDI Wallet Service nicht erreichbar.' })
+      setFlow({ status: 'error', message: 'Wallet-Service nicht erreichbar.' })
     }
   }
 
@@ -121,9 +121,9 @@ export function PidVerificationStep({ credentialType, onPidVerified }: Props) {
       <div className="flex flex-col items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="https://interoperable-europe.ec.europa.eu/sites/default/files/news/logo/2024-03/Logo%20-%20EUDIW.png"
-          alt="EU Digital Identity Wallet"
-          className="h-16 w-auto"
+          src="/d-you-wallet.png"
+          alt="d-you Wallet"
+          className="h-20 w-auto mix-blend-multiply"
         />
         <p className="text-sm text-gray-600 text-center">
           Zur Ausstellung des Credentials muss zuerst Ihre Identität verifiziert werden.
@@ -133,7 +133,7 @@ export function PidVerificationStep({ credentialType, onPidVerified }: Props) {
           className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-blue-600 bg-white px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
         >
           <WalletIcon />
-          Identität mit EUDI Wallet verifizieren
+          Identität mit d-you Wallet verifizieren
         </button>
       </div>
     )
@@ -143,7 +143,7 @@ export function PidVerificationStep({ credentialType, onPidVerified }: Props) {
     return (
       <div className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-600">
         <span className="animate-spin">&#x27F3;</span>
-        Verbinde mit EUDI Wallet...
+        Verbinde mit d-you Wallet...
       </div>
     )
   }
@@ -152,7 +152,7 @@ export function PidVerificationStep({ credentialType, onPidVerified }: Props) {
   if (flow.isMobile) {
     return (
       <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4 text-sm">
-        <p className="mb-3 font-medium text-blue-900">EUDI Wallet öffnen und PID freigeben</p>
+        <p className="mb-3 font-medium text-blue-900">d-you Wallet öffnen und PID freigeben</p>
         <div className="flex items-center gap-2 text-blue-700">
           <span className="animate-spin inline-block">&#x27F3;</span>
           Warte auf Freigabe in der Wallet...
@@ -168,7 +168,7 @@ export function PidVerificationStep({ credentialType, onPidVerified }: Props) {
   return (
     <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
       <p className="mb-3 text-sm font-medium text-blue-900">
-        QR-Code mit EU Digital Identity Wallet scannen
+        QR-Code mit d-you Wallet scannen
       </p>
       <div className="flex justify-center">
         <div className="rounded-lg bg-white p-3 shadow-sm">

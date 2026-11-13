@@ -118,7 +118,7 @@ export default function IssuancePage() {
                 Credential empfangen
               </h2>
               <p className="text-sm text-gray-600 mb-4">
-                Scannen Sie den QR-Code mit Ihrer EUDI Wallet oder tippen Sie auf den Button,
+                Scannen Sie den QR-Code mit Ihrer d-you Wallet oder tippen Sie auf den Button,
                 um das Credential zu empfangen.
               </p>
               <IssuanceWalletButton
@@ -139,7 +139,7 @@ export default function IssuancePage() {
                 Credential ausgestellt!
               </h2>
               <p className="text-sm text-gray-600 mb-6">
-                Die <strong>{config.title}</strong> wurde erfolgreich in Ihre EUDI Wallet ausgestellt.
+                Die <strong>{config.title}</strong> wurde erfolgreich in Ihre d-you Wallet ausgestellt.
                 Sie finden das Credential jetzt in Ihrer Wallet-App.
               </p>
               <Link

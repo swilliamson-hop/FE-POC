@@ -167,9 +167,9 @@ export function StepPersonalAndContact({
   const countryOptions = [{ value: 'DE', label: 'Deutschland' }];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Persönliche Angaben</h2>
+        <h2 className="text-xl font-bold text-gray-900">Persönliche Angaben</h2>
       </div>
 
       <EudiWalletButton onPidReceived={onPidReceived} />
@@ -180,7 +180,7 @@ export function StepPersonalAndContact({
         <div className="flex-grow border-t border-gray-200" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <Input
           label={
             <span className="flex items-center gap-2">
@@ -231,7 +231,7 @@ export function StepPersonalAndContact({
       />
 
       <div className="relative">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2 relative" ref={streetContainerRef}>
             <Input
               label={
@@ -275,7 +275,7 @@ export function StepPersonalAndContact({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         <Input
           label={
             <span className="flex items-center gap-2">
@@ -329,7 +329,7 @@ export function StepPersonalAndContact({
         </div>
       )}
 
-      <div className="flex gap-4 pt-4">
+      <div className="flex gap-3 pt-2">
         <Button variant="outline" onClick={onBack}>
           Zurück
         </Button>

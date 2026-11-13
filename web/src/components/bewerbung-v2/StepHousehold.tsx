@@ -79,12 +79,12 @@ export function StepHousehold({
   const isNextEnabled = true;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Haushalt</h2>
+        <h2 className="text-xl font-bold text-gray-900">Haushalt</h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <Select
           label="Beschäftigungsstatus"
           value={professionType}
@@ -150,7 +150,7 @@ export function StepHousehold({
         placeholder="Erzählen Sie etwas über sich..."
       />
 
-      <div className="flex gap-4 pt-4">
+      <div className="flex gap-3 pt-2">
         <Button variant="outline" onClick={onBack}>
           Zurück
         </Button>

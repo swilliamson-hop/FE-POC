@@ -5,7 +5,7 @@ const sourceSans = Source_Sans_3({ subsets: ['latin'], display: 'swap' })
 
 export const metadata: Metadata = {
   title: 'Mieterportal – Bauverein der Mionauten',
-  description: 'Digitale Nachweise direkt in die EUDI Wallet',
+  description: 'Digitale Nachweise direkt in die d-you Wallet',
 }
 
 export const viewport: Viewport = {
